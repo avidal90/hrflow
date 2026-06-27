@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Filament\Resources\Departments;
+
+use App\Filament\Resources\Departments\Pages\CreateDepartment;
+use App\Filament\Resources\Departments\Pages\EditDepartment;
+use App\Filament\Resources\Departments\Pages\ListDepartments;
+use App\Filament\Resources\Departments\Pages\ViewDepartment;
+use App\Filament\Resources\Departments\Schemas\DepartmentForm;
+use App\Filament\Resources\Departments\Schemas\DepartmentInfolist;
+use App\Filament\Resources\Departments\Tables\DepartmentsTable;
+use App\Models\Department;
+use App\Models\User;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
+use Filament\Tables\Table;
+
+class DepartmentResource extends Resource
+{
+    protected static ?string $model = Department::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static ?string $navigationLabel = 'Departamentos';
+
+    public static function form(Schema $schema): Schema
+    {
+        return DepartmentForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return DepartmentInfolist::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return DepartmentsTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()->with(['tenant', 'manager.user']);
+        $user = Auth::user();
+
+        if (! $user instanceof User) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $query = $query->visibleTo($user);
+
+        if ($user->isDepartmentManager() && ! $user->isCompanyAdmin() && ! $user->isHr()) {
+            $managerEmployeeId = $user->employee?->getKey();
+
+            if ($managerEmployeeId === null) {
+                return $query->whereRaw('1 = 0');
+            }
+
+            $query->where('manager_employee_id', $managerEmployeeId);
+        }
+
+        return $query;
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListDepartments::route('/'),
+            'create' => CreateDepartment::route('/create'),
+            'view' => ViewDepartment::route('/{record}'),
+            'edit' => EditDepartment::route('/{record}/edit'),
+        ];
+    }
+}
