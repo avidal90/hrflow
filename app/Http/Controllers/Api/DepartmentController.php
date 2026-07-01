@@ -24,17 +24,7 @@ class DepartmentController extends Controller
             abort(401);
         }
 
-        $query = Department::query()->with(['tenant', 'manager.user'])->visibleTo($user);
-
-        if ($user->isDepartmentManager() && ! $user->isCompanyAdmin() && ! $user->isHr()) {
-            $managerEmployeeId = $user->employee?->getKey();
-
-            if ($managerEmployeeId === null) {
-                return response()->json([]);
-            }
-
-            $query->where('manager_employee_id', $managerEmployeeId);
-        }
+        $query = Department::query()->with(['tenant', 'manager'])->visibleTo($user);
 
         return response()->json($query->orderBy('name')->get());
     }
@@ -46,7 +36,7 @@ class DepartmentController extends Controller
     {
         $department = Department::create($request->validated());
 
-        return response()->json($department->fresh(['tenant', 'manager.user']), 201);
+        return response()->json($department->fresh(['tenant', 'manager']), 201);
     }
 
     /**
@@ -56,7 +46,7 @@ class DepartmentController extends Controller
     {
         Gate::authorize('view', $department);
 
-        return response()->json($department->load(['tenant', 'manager.user']));
+        return response()->json($department->load(['tenant', 'manager']));
     }
 
     /**
@@ -66,7 +56,7 @@ class DepartmentController extends Controller
     {
         $department->update($request->validated());
 
-        return response()->json($department->fresh(['tenant', 'manager.user']));
+        return response()->json($department->fresh(['tenant', 'manager']));
     }
 
     /**

@@ -100,13 +100,13 @@ class TimeEntryPolicy
         }
 
         if ($user->isDepartmentManager()) {
-            $employee = $timeEntry->employee;
+            $ownedUser = $timeEntry->user;
 
-            if (! $employee instanceof \App\Models\Employee) {
+            if (! $ownedUser instanceof User) {
                 return false;
             }
 
-            return $user->managesEmployee($employee);
+            return $user->managesUser($ownedUser);
         }
 
         return $this->isOwnTimeEntry($user, $timeEntry);
@@ -114,9 +114,8 @@ class TimeEntryPolicy
 
     private function isOwnTimeEntry(User $user, TimeEntry $timeEntry): bool
     {
-        return $timeEntry->employee !== null
-            && $timeEntry->employee->user_id !== null
-            && (string) $timeEntry->employee->user_id === (string) $user->getKey();
+        return $timeEntry->user_id !== null
+            && (string) $timeEntry->user_id === (string) $user->getKey();
     }
 
     private function belongsToUsersTenant(User $user, int|string|null $tenantId): bool

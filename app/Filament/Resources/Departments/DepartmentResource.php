@@ -15,9 +15,9 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Filament\Tables\Table;
 
 class DepartmentResource extends Resource
 {
@@ -44,26 +44,14 @@ class DepartmentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['tenant', 'manager.user']);
+        $query = parent::getEloquentQuery()->with(['tenant', 'manager']);
         $user = Auth::user();
 
         if (! $user instanceof User) {
             return $query->whereRaw('1 = 0');
         }
 
-        $query = $query->visibleTo($user);
-
-        if ($user->isDepartmentManager() && ! $user->isCompanyAdmin() && ! $user->isHr()) {
-            $managerEmployeeId = $user->employee?->getKey();
-
-            if ($managerEmployeeId === null) {
-                return $query->whereRaw('1 = 0');
-            }
-
-            $query->where('manager_employee_id', $managerEmployeeId);
-        }
-
-        return $query;
+        return $query->visibleTo($user);
     }
 
     public static function getRelations(): array

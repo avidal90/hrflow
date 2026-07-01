@@ -4,7 +4,6 @@ namespace App\Filament\Resources\LeaveRequests\Schemas;
 
 use App\Enums\LeaveRequestStatus;
 use App\Enums\LeaveRequestType;
-use App\Models\Employee;
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Forms\Components\DatePicker;
@@ -31,11 +30,11 @@ class LeaveRequestForm
                     ->dehydrated()
                     ->live()
                     ->required(),
-                Select::make('employee_id')
-                    ->label('Empleado')
+                Select::make('user_id')
+                    ->label('Usuario')
                     ->relationship(
-                        name: 'employee',
-                        titleAttribute: 'employee_code',
+                        name: 'user',
+                        titleAttribute: 'name',
                         modifyQueryUsing: function (Builder $query, Get $get): void {
                             $tenantId = $get('tenant_id');
 
@@ -43,13 +42,13 @@ class LeaveRequestForm
                                 $query->where('tenant_id', $tenantId);
                             }
 
-                            $query->orderBy('first_name')->orderBy('last_name');
+                            $query->orderBy('name');
                         },
                     )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record): string => $record instanceof Employee
-                        ? sprintf('%s %s (%s)', $record->first_name, $record->last_name, $record->employee_code)
+                    ->getOptionLabelFromRecordUsing(fn (Model $record): string => $record instanceof User
+                        ? sprintf('%s (%s)', $record->name, $record->employee_code ?? $record->email)
                         : (string) $record->getKey())
-                    ->searchable(['first_name', 'last_name', 'employee_code'])
+                    ->searchable(['name', 'email', 'employee_code'])
                     ->preload()
                     ->required(),
                 Select::make('request_type')
@@ -116,6 +115,6 @@ class LeaveRequestForm
     {
         $user = Auth::user();
 
-        return $user instanceof \App\Models\User && $user->isSuperAdmin();
+        return $user instanceof User && $user->isSuperAdmin();
     }
 }

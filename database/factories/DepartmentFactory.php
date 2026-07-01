@@ -21,7 +21,7 @@ class DepartmentFactory extends Factory
         return [
             'tenant_id' => Tenant::factory(),
             'name' => fake()->unique()->company().' Department',
-            'manager_employee_id' => null,
+            'manager_user_id' => null,
         ];
     }
 }

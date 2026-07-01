@@ -6,6 +6,7 @@ use App\Enums\TimeEntryStatus;
 use App\Models\Concerns\BelongsToTenant;
 use App\Policies\TimeEntryPolicy;
 use Carbon\CarbonImmutable;
+use Database\Factories\TimeEntryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,11 +15,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Validation\ValidationException;
 
-#[Fillable(['tenant_id', 'employee_id', 'work_date', 'check_in_time', 'check_out_time', 'duration_minutes', 'status', 'notes'])]
+#[Fillable(['tenant_id', 'user_id', 'work_date', 'check_in_time', 'check_out_time', 'duration_minutes', 'status', 'notes'])]
 #[UsePolicy(TimeEntryPolicy::class)]
 class TimeEntry extends Model
 {
-    /** @use HasFactory<\Database\Factories\TimeEntryFactory> */
+    /** @use HasFactory<TimeEntryFactory> */
     use BelongsToTenant, HasFactory;
 
     protected static function booted(): void
@@ -53,9 +54,9 @@ class TimeEntry extends Model
         ];
     }
 
-    public function employee(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(User::class);
     }
 
     public function tenant(): BelongsTo
@@ -76,21 +77,13 @@ class TimeEntry extends Model
         }
 
         if ($user->isDepartmentManager()) {
-            $managerEmployeeId = $user->employee?->getKey();
-
-            if ($managerEmployeeId === null) {
-                return $query->whereRaw('1 = 0');
-            }
-
-            return $query->whereHas('employee.department', function (Builder $departmentQuery) use ($managerEmployeeId): void {
-                $departmentQuery->where('manager_employee_id', $managerEmployeeId);
+            return $query->whereHas('user.department', function (Builder $departmentQuery) use ($user): void {
+                $departmentQuery->where('manager_user_id', $user->getKey());
             });
         }
 
         if ($user->hasRole('employee')) {
-            return $query->whereHas('employee', function (Builder $employeeQuery) use ($user): void {
-                $employeeQuery->where('user_id', $user->getKey());
-            });
+            return $query->where('user_id', $user->getKey());
         }
 
         return $query->whereRaw('1 = 0');

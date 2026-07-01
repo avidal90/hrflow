@@ -104,13 +104,13 @@ class LeaveRequestPolicy
         }
 
         if ($user->isDepartmentManager()) {
-            $employee = $leaveRequest->employee;
+            $ownedUser = $leaveRequest->user;
 
-            if (! $employee instanceof \App\Models\Employee) {
+            if (! $ownedUser instanceof User) {
                 return false;
             }
 
-            return $user->managesEmployee($employee);
+            return $user->managesUser($ownedUser);
         }
 
         return $this->isOwnRequest($user, $leaveRequest);
@@ -118,9 +118,8 @@ class LeaveRequestPolicy
 
     private function isOwnRequest(User $user, LeaveRequest $leaveRequest): bool
     {
-        return $leaveRequest->employee !== null
-            && $leaveRequest->employee->user_id !== null
-            && (string) $leaveRequest->employee->user_id === (string) $user->getKey();
+        return $leaveRequest->user_id !== null
+            && (string) $leaveRequest->user_id === (string) $user->getKey();
     }
 
     private function belongsToUsersTenant(User $user, int|string|null $tenantId): bool

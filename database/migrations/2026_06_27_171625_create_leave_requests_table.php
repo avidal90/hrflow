@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->id();
             $table->string('tenant_id');
-            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('request_type')->default('vacation');
             $table->date('start_date');
             $table->date('end_date');
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
-            $table->index(['tenant_id', 'employee_id', 'status']);
+            $table->index(['tenant_id', 'user_id', 'status']);
             $table->index(['tenant_id', 'request_type', 'start_date']);
         });
     }

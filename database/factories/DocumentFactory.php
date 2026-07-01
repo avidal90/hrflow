@@ -4,8 +4,8 @@ namespace Database\Factories;
 
 use App\Enums\DocumentCategory;
 use App\Models\Document;
-use App\Models\Employee;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,7 +22,7 @@ class DocumentFactory extends Factory
     {
         return [
             'tenant_id' => Tenant::factory(),
-            'employee_id' => Employee::factory()->state(fn (array $attributes) => [
+            'user_id' => User::factory()->state(fn (array $attributes) => [
                 'tenant_id' => $attributes['tenant_id'],
             ]),
             'category' => fake()->randomElement(DocumentCategory::cases())->value,

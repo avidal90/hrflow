@@ -6,6 +6,7 @@ use App\Enums\LeaveRequestStatus;
 use App\Enums\LeaveRequestType;
 use App\Models\Concerns\BelongsToTenant;
 use App\Policies\LeaveRequestPolicy;
+use Database\Factories\LeaveRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'tenant_id',
-    'employee_id',
+    'user_id',
     'request_type',
     'start_date',
     'end_date',
@@ -29,7 +30,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[UsePolicy(LeaveRequestPolicy::class)]
 class LeaveRequest extends Model
 {
-    /** @use HasFactory<\Database\Factories\LeaveRequestFactory> */
+    /** @use HasFactory<LeaveRequestFactory> */
     use BelongsToTenant, HasFactory, SoftDeletes;
 
     protected function casts(): array
@@ -43,9 +44,9 @@ class LeaveRequest extends Model
         ];
     }
 
-    public function employee(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(User::class);
     }
 
     public function resolvedBy(): BelongsTo
@@ -71,21 +72,13 @@ class LeaveRequest extends Model
         }
 
         if ($user->isDepartmentManager()) {
-            $managerEmployeeId = $user->employee?->getKey();
-
-            if ($managerEmployeeId === null) {
-                return $query->whereRaw('1 = 0');
-            }
-
-            return $query->whereHas('employee.department', function (Builder $departmentQuery) use ($managerEmployeeId): void {
-                $departmentQuery->where('manager_employee_id', $managerEmployeeId);
+            return $query->whereHas('user.department', function (Builder $departmentQuery) use ($user): void {
+                $departmentQuery->where('manager_user_id', $user->getKey());
             });
         }
 
         if ($user->hasRole('employee')) {
-            return $query->whereHas('employee', function (Builder $employeeQuery) use ($user): void {
-                $employeeQuery->where('user_id', $user->getKey());
-            });
+            return $query->where('user_id', $user->getKey());
         }
 
         return $query->whereRaw('1 = 0');

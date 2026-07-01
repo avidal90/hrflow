@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TimeEntries\Tables;
 
 use App\Enums\TimeEntryStatus;
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -24,11 +25,11 @@ class TimeEntriesTable
                     ->label('Empresa')
                     ->visible(fn (): bool => self::currentUserIsSuperAdmin())
                     ->searchable(),
-                TextColumn::make('employee.employee_code')
+                TextColumn::make('user.employee_code')
                     ->label('Codigo')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('employee.first_name')
+                TextColumn::make('user.name')
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
@@ -76,6 +77,6 @@ class TimeEntriesTable
     {
         $user = Auth::user();
 
-        return $user instanceof \App\Models\User && $user->isSuperAdmin();
+        return $user instanceof User && $user->isSuperAdmin();
     }
 }

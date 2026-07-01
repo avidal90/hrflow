@@ -104,19 +104,18 @@ class DocumentPolicy
         }
 
         if ($user->isDepartmentManager()) {
-            $employee = $document->employee;
+            $ownedUser = $document->user;
 
-            if (! $employee instanceof \App\Models\Employee) {
+            if (! $ownedUser instanceof User) {
                 return false;
             }
 
-            return $user->managesEmployee($employee);
+            return $user->managesUser($ownedUser);
         }
 
         return $document->is_visible_to_employee
-            && $document->employee !== null
-            && $document->employee->user_id !== null
-            && (string) $document->employee->user_id === (string) $user->getKey();
+            && $document->user_id !== null
+            && (string) $document->user_id === (string) $user->getKey();
     }
 
     private function belongsToUsersTenant(User $user, int|string|null $tenantId): bool

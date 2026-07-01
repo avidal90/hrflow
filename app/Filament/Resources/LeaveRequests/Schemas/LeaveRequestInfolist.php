@@ -15,10 +15,11 @@ class LeaveRequestInfolist
             ->components([
                 TextEntry::make('tenant.name')
                     ->label('Empresa'),
-                TextEntry::make('employee.employee_code')
-                    ->label('Codigo empleado'),
-                TextEntry::make('employee.first_name')
-                    ->label('Nombre empleado'),
+                TextEntry::make('user.employee_code')
+                    ->label('Codigo empleado')
+                    ->placeholder('-'),
+                TextEntry::make('user.name')
+                    ->label('Nombre usuario'),
                 TextEntry::make('request_type')
                     ->label('Tipo')
                     ->formatStateUsing(fn (LeaveRequestType|string $state): string => ($state instanceof LeaveRequestType ? $state : LeaveRequestType::from($state))->label()),

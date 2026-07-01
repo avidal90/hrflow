@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Department;
-use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -21,7 +21,7 @@ class StoreDepartmentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-    * @return array<string, mixed>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
@@ -41,10 +41,10 @@ class StoreDepartmentRequest extends FormRequest
                     fn (Builder $query): Builder => $query->where('tenant_id', $tenantId),
                 ),
             ],
-            'manager_employee_id' => [
+            'manager_user_id' => [
                 'nullable',
                 'integer',
-                Rule::exists(Employee::class, 'id')->where(
+                Rule::exists(User::class, 'id')->where(
                     fn (Builder $query): Builder => $query->where('tenant_id', $tenantId),
                 ),
             ],

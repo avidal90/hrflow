@@ -3,7 +3,6 @@
 namespace Tests\Feature\Authorization;
 
 use App\Models\Department;
-use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
@@ -41,11 +40,11 @@ class PolicyAuthorizationTest extends TestCase
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
-        $employee = Employee::factory()->create([
+        $employee = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        $otherEmployee = Employee::factory()->create([
+        $otherEmployee = User::factory()->create([
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
@@ -73,21 +72,21 @@ class PolicyAuthorizationTest extends TestCase
         $this->assertTrue($hrUser->can('update', $department));
         $this->assertFalse($hrUser->can('delete', $department));
 
-        $this->assertTrue($companyAdmin->can('viewAny', Employee::class));
-        $this->assertTrue($companyAdmin->can('create', Employee::class));
+        $this->assertTrue($companyAdmin->can('viewAny', User::class));
+        $this->assertTrue($companyAdmin->can('create', User::class));
         $this->assertTrue($companyAdmin->can('view', $employee));
         $this->assertFalse($companyAdmin->can('view', $otherEmployee));
         $this->assertTrue($companyAdmin->can('update', $employee));
         $this->assertFalse($companyAdmin->can('update', $otherEmployee));
         $this->assertTrue($companyAdmin->can('delete', $employee));
 
-        $this->assertTrue($hrUser->can('viewAny', Employee::class));
-        $this->assertTrue($hrUser->can('create', Employee::class));
+        $this->assertTrue($hrUser->can('viewAny', User::class));
+        $this->assertTrue($hrUser->can('create', User::class));
         $this->assertTrue($hrUser->can('update', $employee));
         $this->assertFalse($hrUser->can('delete', $employee));
     }
 
-    public function test_department_manager_is_limited_to_managed_departments_and_employees(): void
+    public function test_department_manager_is_limited_to_managed_departments_and_users(): void
     {
         $tenant = Tenant::factory()->create();
         $otherTenant = Tenant::factory()->create();
@@ -108,22 +107,20 @@ class PolicyAuthorizationTest extends TestCase
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        $managerEmployee = Employee::factory()->create([
-            'tenant_id' => $tenant->getKey(),
-            'user_id' => $managerUser->getKey(),
+        $managerUser->update([
             'department_id' => $managedDepartment->getKey(),
         ]);
 
         $managedDepartment->update([
-            'manager_employee_id' => $managerEmployee->getKey(),
+            'manager_user_id' => $managerUser->getKey(),
         ]);
 
-        $managedEmployee = Employee::factory()->create([
+        $managedEmployee = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
             'department_id' => $managedDepartment->getKey(),
         ]);
 
-        $unmanagedEmployee = Employee::factory()->create([
+        $unmanagedEmployee = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
             'department_id' => $otherDepartment->getKey(),
         ]);
@@ -132,7 +129,7 @@ class PolicyAuthorizationTest extends TestCase
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
-        $externalEmployee = Employee::factory()->create([
+        $externalEmployee = User::factory()->create([
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
@@ -147,8 +144,8 @@ class PolicyAuthorizationTest extends TestCase
         $this->assertFalse($managerUser->can('update', $otherDepartment));
         $this->assertFalse($managerUser->can('delete', $managedDepartment));
 
-        $this->assertTrue($managerUser->can('viewAny', Employee::class));
-        $this->assertFalse($managerUser->can('create', Employee::class));
+        $this->assertTrue($managerUser->can('viewAny', User::class));
+        $this->assertFalse($managerUser->can('create', User::class));
         $this->assertTrue($managerUser->can('view', $managedEmployee));
         $this->assertFalse($managerUser->can('view', $unmanagedEmployee));
         $this->assertFalse($managerUser->can('view', $externalEmployee));
@@ -178,11 +175,11 @@ class PolicyAuthorizationTest extends TestCase
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
-        $ownEmployee = Employee::factory()->create([
+        $ownEmployee = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        $otherEmployee = Employee::factory()->create([
+        $otherEmployee = User::factory()->create([
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
@@ -190,8 +187,8 @@ class PolicyAuthorizationTest extends TestCase
 
         $visibleDepartmentIds = Department::query()->forCurrentTenant()->pluck('id')->all();
         $visibleDepartmentTenantIds = Department::query()->forCurrentTenant()->pluck('tenant_id')->unique()->values()->all();
-        $visibleEmployeeIds = Employee::query()->forCurrentTenant()->pluck('id')->all();
-        $visibleEmployeeTenantIds = Employee::query()->forCurrentTenant()->pluck('tenant_id')->unique()->values()->all();
+        $visibleEmployeeIds = User::query()->forCurrentTenant()->pluck('id')->all();
+        $visibleEmployeeTenantIds = User::query()->forCurrentTenant()->pluck('tenant_id')->unique()->values()->all();
 
         $this->assertContains($ownDepartment->getKey(), $visibleDepartmentIds);
         $this->assertNotContains($otherDepartment->getKey(), $visibleDepartmentIds);
@@ -216,10 +213,10 @@ class PolicyAuthorizationTest extends TestCase
         $this->actingAs($superAdmin);
 
         $superAdminDepartmentTenantIds = Department::query()->forCurrentTenant()->pluck('tenant_id')->unique()->values()->all();
-        $superAdminEmployeeTenantIds = Employee::query()->forCurrentTenant()->pluck('tenant_id')->unique()->values()->all();
+        $superAdminEmployeeTenantIds = User::query()->forCurrentTenant()->pluck('tenant_id')->unique()->values()->all();
 
         $this->assertContains($otherDepartment->getKey(), Department::query()->forCurrentTenant()->pluck('id')->all());
-        $this->assertContains($otherEmployee->getKey(), Employee::query()->forCurrentTenant()->pluck('id')->all());
+        $this->assertContains($otherEmployee->getKey(), User::query()->forCurrentTenant()->pluck('id')->all());
         $this->assertContains((string) $tenant->getKey(), array_map('strval', $superAdminDepartmentTenantIds));
         $this->assertContains((string) $otherTenant->getKey(), array_map('strval', $superAdminDepartmentTenantIds));
         $this->assertContains((string) $tenant->getKey(), array_map('strval', $superAdminEmployeeTenantIds));
@@ -243,7 +240,7 @@ class PolicyAuthorizationTest extends TestCase
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
-        $employee = Employee::factory()->create([
+        $employee = User::factory()->create([
             'tenant_id' => $otherTenant->getKey(),
         ]);
 

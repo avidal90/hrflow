@@ -45,7 +45,7 @@ class LeaveRequestResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['tenant', 'employee.user', 'resolvedBy']);
+        $query = parent::getEloquentQuery()->with(['tenant', 'user', 'resolvedBy']);
         $user = Auth::user();
 
         if (! $user instanceof User) {

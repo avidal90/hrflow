@@ -14,10 +14,11 @@ class TimeEntryInfolist
             ->components([
                 TextEntry::make('tenant.name')
                     ->label('Empresa'),
-                TextEntry::make('employee.employee_code')
-                    ->label('Codigo empleado'),
-                TextEntry::make('employee.first_name')
-                    ->label('Nombre empleado'),
+                TextEntry::make('user.employee_code')
+                    ->label('Codigo empleado')
+                    ->placeholder('-'),
+                TextEntry::make('user.name')
+                    ->label('Nombre usuario'),
                 TextEntry::make('work_date')
                     ->label('Fecha')
                     ->date(),

@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('tenant_id')->nullable()->after('id');
-            $table->index('tenant_id');
             $table->foreign('tenant_id')->references('id')->on('tenants')->nullOnDelete();
+            $table->unique(['tenant_id', 'employee_code']);
         });
     }
 
@@ -25,8 +24,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['tenant_id']);
-            $table->dropIndex(['tenant_id']);
-            $table->dropColumn('tenant_id');
+            $table->dropUnique(['tenant_id', 'employee_code']);
         });
     }
 };

@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DepartmentController;
-use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -11,5 +11,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::apiResource('departments', DepartmentController::class);
-    Route::apiResource('employees', EmployeeController::class);
+    Route::apiResource('users', UserController::class);
 });

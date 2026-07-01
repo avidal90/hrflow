@@ -45,7 +45,7 @@ class DocumentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['tenant', 'employee.user']);
+        $query = parent::getEloquentQuery()->with(['tenant', 'user']);
         $user = Auth::user();
 
         if (! $user instanceof User) {

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
             $table->string('tenant_id');
-            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('category');
             $table->string('name');
             $table->text('description')->nullable();
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
-            $table->index(['tenant_id', 'employee_id', 'category']);
+            $table->index(['tenant_id', 'user_id', 'category']);
             $table->index(['tenant_id', 'uploaded_at']);
         });
     }

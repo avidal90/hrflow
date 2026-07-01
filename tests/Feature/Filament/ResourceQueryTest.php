@@ -3,10 +3,9 @@
 namespace Tests\Feature\Filament;
 
 use App\Filament\Resources\Departments\DepartmentResource;
-use App\Filament\Resources\Employees\EmployeeResource;
 use App\Filament\Resources\Tenants\TenantResource;
+use App\Filament\Resources\Users\UserResource;
 use App\Models\Department;
-use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
@@ -60,22 +59,20 @@ class ResourceQueryTest extends TestCase
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        $managerEmployee = Employee::factory()->create([
-            'tenant_id' => $tenant->getKey(),
-            'user_id' => $managerUser->getKey(),
+        $managerUser->update([
             'department_id' => $managedDepartment->getKey(),
         ]);
 
         $managedDepartment->update([
-            'manager_employee_id' => $managerEmployee->getKey(),
+            'manager_user_id' => $managerUser->getKey(),
         ]);
 
-        $managedEmployee = Employee::factory()->create([
+        $managedEmployee = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
             'department_id' => $managedDepartment->getKey(),
         ]);
 
-        $unmanagedEmployee = Employee::factory()->create([
+        $unmanagedEmployee = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
             'department_id' => $otherDepartment->getKey(),
         ]);
@@ -84,7 +81,7 @@ class ResourceQueryTest extends TestCase
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
-        Employee::factory()->create([
+        User::factory()->create([
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
@@ -95,9 +92,9 @@ class ResourceQueryTest extends TestCase
             DepartmentResource::getEloquentQuery()->pluck('id')->all(),
         );
 
-        $visibleEmployeeIds = EmployeeResource::getEloquentQuery()->pluck('id')->all();
+        $visibleEmployeeIds = UserResource::getEloquentQuery()->pluck('id')->all();
 
-        $this->assertContains($managerEmployee->getKey(), $visibleEmployeeIds);
+        $this->assertContains($managerUser->getKey(), $visibleEmployeeIds);
         $this->assertContains($managedEmployee->getKey(), $visibleEmployeeIds);
         $this->assertNotContains($unmanagedEmployee->getKey(), $visibleEmployeeIds);
     }

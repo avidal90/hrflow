@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
@@ -56,7 +55,7 @@ class DepartmentApiTest extends TestCase
 
         $companyAdmin->assignRole('company-admin');
 
-        $foreignManager = Employee::factory()->create([
+        $foreignManager = User::factory()->create([
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
@@ -64,10 +63,10 @@ class DepartmentApiTest extends TestCase
 
         $response = $this->postJson('/api/departments', [
             'name' => 'Legal',
-            'manager_employee_id' => $foreignManager->getKey(),
+            'manager_user_id' => $foreignManager->getKey(),
         ]);
 
-        $response->assertUnprocessable()->assertJsonValidationErrors(['manager_employee_id']);
+        $response->assertUnprocessable()->assertJsonValidationErrors(['manager_user_id']);
     }
 
     public function test_department_manager_cannot_create_department(): void

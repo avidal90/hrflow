@@ -44,7 +44,7 @@ class TimeEntryResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['tenant', 'employee.user', 'employee.department']);
+        $query = parent::getEloquentQuery()->with(['tenant', 'user', 'user.department']);
         $user = Auth::user();
 
         if (! $user instanceof User) {

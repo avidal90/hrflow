@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('time_entries', function (Blueprint $table) {
             $table->id();
             $table->string('tenant_id');
-            $table->foreignId('employee_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->date('work_date');
             $table->time('check_in_time');
             $table->time('check_out_time')->nullable();
@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
-            $table->index(['tenant_id', 'employee_id', 'work_date']);
+            $table->index(['tenant_id', 'user_id', 'work_date']);
             $table->index(['tenant_id', 'status']);
         });
     }

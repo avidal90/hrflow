@@ -4,6 +4,7 @@ namespace App\Filament\Resources\LeaveRequests\Tables;
 
 use App\Enums\LeaveRequestStatus;
 use App\Enums\LeaveRequestType;
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -26,11 +27,11 @@ class LeaveRequestsTable
                     ->label('Empresa')
                     ->visible(fn (): bool => self::currentUserIsSuperAdmin())
                     ->searchable(),
-                TextColumn::make('employee.employee_code')
+                TextColumn::make('user.employee_code')
                     ->label('Codigo')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('employee.first_name')
+                TextColumn::make('user.name')
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
@@ -82,6 +83,6 @@ class LeaveRequestsTable
     {
         $user = Auth::user();
 
-        return $user instanceof \App\Models\User && $user->isSuperAdmin();
+        return $user instanceof User && $user->isSuperAdmin();
     }
 }

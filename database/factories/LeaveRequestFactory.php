@@ -4,9 +4,9 @@ namespace Database\Factories;
 
 use App\Enums\LeaveRequestStatus;
 use App\Enums\LeaveRequestType;
-use App\Models\Employee;
 use App\Models\LeaveRequest;
 use App\Models\Tenant;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -26,7 +26,7 @@ class LeaveRequestFactory extends Factory
 
         return [
             'tenant_id' => Tenant::factory(),
-            'employee_id' => Employee::factory()->state(fn (array $attributes) => [
+            'user_id' => User::factory()->state(fn (array $attributes) => [
                 'tenant_id' => $attributes['tenant_id'],
             ]),
             'request_type' => LeaveRequestType::Vacation->value,

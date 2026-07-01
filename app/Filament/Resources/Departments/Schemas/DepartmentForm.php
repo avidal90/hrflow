@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Departments\Schemas;
 
-use App\Models\Employee;
 use App\Models\Tenant;
+use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
@@ -30,11 +30,11 @@ class DepartmentForm
                     ->label('Nombre')
                     ->required()
                     ->maxLength(255),
-                Select::make('manager_employee_id')
+                Select::make('manager_user_id')
                     ->label('Responsable')
                     ->relationship(
                         name: 'manager',
-                        titleAttribute: 'employee_code',
+                        titleAttribute: 'name',
                         modifyQueryUsing: function (Builder $query, Get $get): void {
                             $tenantId = $get('tenant_id');
 
@@ -42,13 +42,13 @@ class DepartmentForm
                                 $query->where('tenant_id', $tenantId);
                             }
 
-                            $query->orderBy('first_name')->orderBy('last_name');
+                            $query->orderBy('name');
                         },
                     )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record): string => $record instanceof Employee
-                        ? sprintf('%s %s (%s)', $record->first_name, $record->last_name, $record->employee_code)
+                    ->getOptionLabelFromRecordUsing(fn (Model $record): string => $record instanceof User
+                        ? sprintf('%s (%s)', $record->name, $record->employee_code ?? $record->email)
                         : (string) $record->getKey())
-                    ->searchable(['first_name', 'last_name', 'employee_code'])
+                    ->searchable(['name', 'email', 'employee_code'])
                     ->preload()
                     ->default(null),
             ])
@@ -59,6 +59,6 @@ class DepartmentForm
     {
         $user = Auth::user();
 
-        return $user instanceof \App\Models\User && $user->isSuperAdmin();
+        return $user instanceof User && $user->isSuperAdmin();
     }
 }

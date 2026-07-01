@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Policies\TenantPolicy;
+use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +13,7 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 #[UsePolicy(TenantPolicy::class)]
 class Tenant extends BaseTenant
 {
-    /** @use HasFactory<\Database\Factories\TenantFactory> */
+    /** @use HasFactory<TenantFactory> */
     use HasFactory;
 
     public static function getCustomColumns(): array
@@ -37,11 +38,6 @@ class Tenant extends BaseTenant
         return $this->hasMany(Domain::class, 'tenant_id');
     }
 
-    public function employees(): HasMany
-    {
-        return $this->hasMany(Employee::class);
-    }
-
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
@@ -64,7 +60,7 @@ class Tenant extends BaseTenant
 
     public function getEmployeeLicensesUsageAttribute(): string
     {
-        $used = $this->employees_count ?? $this->employees()->count();
+        $used = $this->users_count ?? $this->users()->count();
         $limit = $this->employee_license_limit;
 
         if ($limit === null) {
@@ -76,7 +72,7 @@ class Tenant extends BaseTenant
 
     public function getEmployeeLicensesUsagePercentAttribute(): ?float
     {
-        $used = (float) ($this->employees_count ?? $this->employees()->count());
+        $used = (float) ($this->users_count ?? $this->users()->count());
         $limit = $this->employee_license_limit;
 
         if ($limit === null || $limit <= 0) {

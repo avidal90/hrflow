@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('tenant_id');
             $table->string('name');
-            $table->foreignId('manager_employee_id')->nullable()->index();
+            $table->foreignId('manager_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();

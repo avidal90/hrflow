@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\Documents\Schemas;
 
 use App\Enums\DocumentCategory;
-use App\Models\Employee;
 use App\Models\Tenant;
+use App\Models\User;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -30,11 +30,11 @@ class DocumentForm
                     ->dehydrated()
                     ->live()
                     ->required(),
-                Select::make('employee_id')
-                    ->label('Empleado')
+                Select::make('user_id')
+                    ->label('Usuario')
                     ->relationship(
-                        name: 'employee',
-                        titleAttribute: 'employee_code',
+                        name: 'user',
+                        titleAttribute: 'name',
                         modifyQueryUsing: function (Builder $query, Get $get): void {
                             $tenantId = $get('tenant_id');
 
@@ -42,13 +42,13 @@ class DocumentForm
                                 $query->where('tenant_id', $tenantId);
                             }
 
-                            $query->orderBy('first_name')->orderBy('last_name');
+                            $query->orderBy('name');
                         },
                     )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record): string => $record instanceof Employee
-                        ? sprintf('%s %s (%s)', $record->first_name, $record->last_name, $record->employee_code)
+                    ->getOptionLabelFromRecordUsing(fn (Model $record): string => $record instanceof User
+                        ? sprintf('%s (%s)', $record->name, $record->employee_code ?? $record->email)
                         : (string) $record->getKey())
-                    ->searchable(['first_name', 'last_name', 'employee_code'])
+                    ->searchable(['name', 'email', 'employee_code'])
                     ->preload()
                     ->required(),
                 Select::make('category')
@@ -93,6 +93,6 @@ class DocumentForm
     {
         $user = Auth::user();
 
-        return $user instanceof \App\Models\User && $user->isSuperAdmin();
+        return $user instanceof User && $user->isSuperAdmin();
     }
 }
