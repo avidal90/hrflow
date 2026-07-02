@@ -31,7 +31,7 @@ Route::middleware([
     Route::post('/login', [PortalAuthenticatedSessionController::class, 'store'])->name('portal.login.store');
 
     Route::middleware('auth')->group(function (): void {
-        Route::post('/logout', [PortalAuthenticatedSessionController::class, 'destroy'])->name('logout');
+        Route::post('/logout', [PortalAuthenticatedSessionController::class, 'destroy'])->name('portal.logout');
 
         Route::get('/dashboard', PortalDashboardController::class)->name('portal.dashboard');
 
