@@ -58,6 +58,7 @@ class LeaveRequests extends Component
     public function remainingVacationDays(): int
     {
         $user = auth()->user();
+        abort_unless($user instanceof User, 403);
 
         $usedDays = LeaveRequest::where('user_id', $user->id)
             ->where('tenant_id', $user->tenant_id)
