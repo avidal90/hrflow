@@ -23,6 +23,10 @@ class TimeEntryResource extends Resource
 {
     protected static ?string $model = TimeEntry::class;
 
+    protected static ?string $modelLabel = 'fichaje';
+
+    protected static ?string $pluralModelLabel = 'fichajes';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Fichajes';
@@ -40,6 +44,13 @@ class TimeEntryResource extends Resource
     public static function table(Table $table): Table
     {
         return TimeEntriesTable::configure($table);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->can('viewAny', TimeEntry::class);
     }
 
     public static function getEloquentQuery(): Builder

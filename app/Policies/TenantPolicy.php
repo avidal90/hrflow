@@ -22,7 +22,7 @@ class TenantPolicy
     public function viewAny(User $user): bool
     {
         return $user->tenant_id !== null
-            && ($user->isCompanyAdmin() || $user->isHr());
+            && $user->isCompanyAdmin();
     }
 
     /**
@@ -31,7 +31,7 @@ class TenantPolicy
     public function view(User $user, Tenant $tenant): bool
     {
         return $this->sharesTenant($user, $tenant)
-            && ($user->isCompanyAdmin() || $user->isHr());
+            && $user->isCompanyAdmin();
     }
 
     /**
@@ -47,8 +47,7 @@ class TenantPolicy
      */
     public function update(User $user, Tenant $tenant): bool
     {
-        return $this->sharesTenant($user, $tenant)
-            && $user->isCompanyAdmin();
+        return false;
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\LeaveRequests\Tables;
 
 use App\Enums\LeaveRequestStatus;
 use App\Enums\LeaveRequestType;
+use App\Models\Department;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -15,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestsTable
@@ -57,12 +59,32 @@ class LeaveRequestsTable
                     ->searchable(),
             ])
             ->filters([
+                SelectFilter::make('tenant_id')
+                    ->label('Empresa')
+                    ->relationship('tenant', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn (): bool => self::currentUserIsSuperAdmin()),
                 SelectFilter::make('status')
                     ->label('Estado')
                     ->options(LeaveRequestStatus::options()),
                 SelectFilter::make('request_type')
                     ->label('Tipo')
                     ->options(LeaveRequestType::options()),
+                SelectFilter::make('department_id')
+                    ->label('Departamento')
+                    ->options(fn (): array => self::departmentOptions())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $departmentId = $data['value'] ?? null;
+
+                        if (blank($departmentId)) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('user', function (Builder $userQuery) use ($departmentId): void {
+                            $userQuery->where('department_id', $departmentId);
+                        });
+                    }),
                 TrashedFilter::make(),
             ])
             ->defaultSort('start_date', 'desc')
@@ -81,8 +103,31 @@ class LeaveRequestsTable
 
     private static function currentUserIsSuperAdmin(): bool
     {
+        return self::currentUser()?->isSuperAdmin() ?? false;
+    }
+
+    private static function currentUser(): ?User
+    {
         $user = Auth::user();
 
-        return $user instanceof User && $user->isSuperAdmin();
+        return $user instanceof User ? $user : null;
+    }
+
+    /**
+     * @return array<int|string, string>
+     */
+    private static function departmentOptions(): array
+    {
+        $user = self::currentUser();
+
+        if (! $user instanceof User) {
+            return [];
+        }
+
+        return Department::query()
+            ->visibleTo($user)
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 }

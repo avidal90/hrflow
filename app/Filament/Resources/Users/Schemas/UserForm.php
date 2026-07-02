@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Users\Schemas;
 use App\Models\Department;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\Validation\PasswordRules;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
@@ -22,7 +24,11 @@ class UserForm
             ->components([
                 Select::make('tenant_id')
                     ->label('Empresa')
-                    ->options(fn (): array => Tenant::query()->orderBy('name')->pluck('name', 'id')->all())
+                    ->options(fn (): array => Tenant::query()
+                        ->when(! self::currentUserIsSuperAdmin(), fn (Builder $query) => $query->whereKeyNot(Tenant::principalTenantId()))
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->all())
                     ->default(fn (): mixed => Auth::user()?->tenant_id)
                     ->disabled(fn (): bool => ! self::currentUserIsSuperAdmin())
                     ->dehydrated()
@@ -37,6 +43,21 @@ class UserForm
                     ->required()
                     ->email()
                     ->maxLength(255),
+                FileUpload::make('avatar_path')
+                    ->label('Foto de perfil')
+                    ->avatar()
+                    ->image()
+                    ->imageEditor()
+                    ->disk('public')
+                    ->directory(function (Get $get, ?Model $record): string {
+                        $tenantId = $get('tenant_id') ?? $record?->getAttribute('tenant_id') ?? 'shared';
+
+                        return 'avatars/'.$tenantId;
+                    })
+                    ->visibility('public')
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->maxSize(2048)
+                    ->columnSpanFull(),
                 Select::make('department_id')
                     ->label('Departamento')
                     ->relationship(
@@ -58,6 +79,18 @@ class UserForm
                     ->searchable(['name'])
                     ->preload()
                     ->required(),
+                Select::make('role_name')
+                    ->label('Rol')
+                    ->options(fn (?User $record): array => User::assignableRoleOptionsFor(Auth::user(), $record))
+                    ->default('employee')
+                    ->required()
+                    ->searchable()
+                    ->disabled(fn (?User $record): bool => ! User::canManageRoleAssignments(Auth::user(), $record))
+                    ->afterStateHydrated(function (Select $component, ?User $record): void {
+                        if ($record instanceof User) {
+                            $component->state($record->primaryRoleName());
+                        }
+                    }),
                 TextInput::make('employee_code')
                     ->label('Codigo')
                     ->required()
@@ -75,6 +108,14 @@ class UserForm
                     ])
                     ->required()
                     ->default('active'),
+                TextInput::make('annual_vacation_days')
+                    ->label('Dias de vacaciones asignados')
+                    ->numeric()
+                    ->integer()
+                    ->minValue(0)
+                    ->maxValue(365)
+                    ->required()
+                    ->default(23),
                 TextInput::make('job_title')
                     ->label('Puesto')
                     ->maxLength(255)
@@ -83,8 +124,10 @@ class UserForm
                     ->label('Contrasena')
                     ->password()
                     ->revealable()
+                    ->visible(fn (string $operation): bool => $operation === 'create')
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->dehydrated(fn (?string $state): bool => filled($state))
+                    ->rule(PasswordRules::user())
                     ->maxLength(255),
             ])
             ->columns(2);

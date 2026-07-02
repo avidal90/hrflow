@@ -22,7 +22,7 @@ class DocumentPolicy
     public function viewAny(User $user): bool
     {
         return $user->tenant_id !== null
-            && $user->hasAnyRole(['company-admin', 'hr', 'department-manager', 'employee']);
+            && $this->canManageDocuments($user);
     }
 
     /**
@@ -40,7 +40,7 @@ class DocumentPolicy
     public function create(User $user): bool
     {
         return $user->tenant_id !== null
-            && $user->hasAnyRole(['company-admin', 'hr']);
+            && $this->canManageDocuments($user);
     }
 
     /**
@@ -49,7 +49,7 @@ class DocumentPolicy
     public function update(User $user, Document $document): bool
     {
         return $this->belongsToUsersTenant($user, $document->tenant_id)
-            && $user->hasAnyRole(['company-admin', 'hr']);
+            && $this->canManageDocuments($user);
     }
 
     /**
@@ -99,27 +99,20 @@ class DocumentPolicy
 
     private function canViewDocument(User $user, Document $document): bool
     {
-        if ($user->hasAnyRole(['company-admin', 'hr'])) {
+        if ($this->canManageDocuments($user)) {
             return true;
         }
 
-        if ($user->isDepartmentManager()) {
-            $ownedUser = $document->user;
-
-            if (! $ownedUser instanceof User) {
-                return false;
-            }
-
-            return $user->managesUser($ownedUser);
-        }
-
-        return $document->is_visible_to_employee
-            && $document->user_id !== null
-            && (string) $document->user_id === (string) $user->getKey();
+        return false;
     }
 
     private function belongsToUsersTenant(User $user, int|string|null $tenantId): bool
     {
         return $user->sharesTenantWithModel($tenantId);
+    }
+
+    private function canManageDocuments(User $user): bool
+    {
+        return $user->isCompanyAdmin() || $user->isHr();
     }
 }

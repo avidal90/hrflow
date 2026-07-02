@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TimeEntries\Tables;
 
 use App\Enums\TimeEntryStatus;
+use App\Models\Department;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -57,6 +58,20 @@ class TimeEntriesTable
                 SelectFilter::make('status')
                     ->label('Estado')
                     ->options(TimeEntryStatus::options()),
+                SelectFilter::make('department_id')
+                    ->label('Departamento')
+                    ->options(fn (): array => self::departmentOptions())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $departmentId = $data['value'] ?? null;
+
+                        if (blank($departmentId)) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('user', function (Builder $userQuery) use ($departmentId): void {
+                            $userQuery->where('department_id', $departmentId);
+                        });
+                    }),
                 Filter::make('open_entries')
                     ->label('Solo incompletos')
                     ->query(fn (Builder $query): Builder => $query->where('status', TimeEntryStatus::Incomplete->value)),
@@ -75,8 +90,31 @@ class TimeEntriesTable
 
     private static function currentUserIsSuperAdmin(): bool
     {
+        return self::currentUser()?->isSuperAdmin() ?? false;
+    }
+
+    private static function currentUser(): ?User
+    {
         $user = Auth::user();
 
-        return $user instanceof User && $user->isSuperAdmin();
+        return $user instanceof User ? $user : null;
+    }
+
+    /**
+     * @return array<int|string, string>
+     */
+    private static function departmentOptions(): array
+    {
+        $user = self::currentUser();
+
+        if (! $user instanceof User) {
+            return [];
+        }
+
+        return Department::query()
+            ->visibleTo($user)
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 }

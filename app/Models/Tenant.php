@@ -16,6 +16,28 @@ class Tenant extends BaseTenant
     /** @use HasFactory<TenantFactory> */
     use HasFactory;
 
+    public const PRINCIPAL_TENANT_ID = 'hrflow-principal';
+
+    public static function principalTenantId(): string
+    {
+        return self::PRINCIPAL_TENANT_ID;
+    }
+
+    public static function ensurePrincipalTenant(): self
+    {
+        return self::query()->firstOrCreate(
+            ['id' => self::principalTenantId()],
+            [
+                'name' => 'HRFlow Principal',
+                'status' => 'active',
+                'locale' => 'es',
+                'timezone' => 'Europe/Madrid',
+                'employee_license_limit' => null,
+                'data' => [],
+            ]
+        );
+    }
+
     public static function getCustomColumns(): array
     {
         return [

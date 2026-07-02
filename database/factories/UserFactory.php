@@ -33,6 +33,7 @@ class UserFactory extends Factory
             'employee_code' => fake()->unique()->bothify('EMP-####'),
             'hire_date' => fake()->dateTimeBetween('-5 years', 'now')->format('Y-m-d'),
             'employment_status' => 'active',
+            'annual_vacation_days' => 23,
             'job_title' => fake()->jobTitle(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

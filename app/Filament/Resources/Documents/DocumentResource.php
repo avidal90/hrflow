@@ -24,6 +24,10 @@ class DocumentResource extends Resource
 {
     protected static ?string $model = Document::class;
 
+    protected static ?string $modelLabel = 'documento';
+
+    protected static ?string $pluralModelLabel = 'documentos';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Documentos';
@@ -43,9 +47,16 @@ class DocumentResource extends Resource
         return DocumentsTable::configure($table);
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->can('viewAny', Document::class);
+    }
+
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with(['tenant', 'user']);
+        $query = parent::getEloquentQuery()->with(['tenant', 'user', 'uploadedBy']);
         $user = Auth::user();
 
         if (! $user instanceof User) {

@@ -40,7 +40,7 @@ class LeaveRequestPolicy
     public function create(User $user): bool
     {
         return $user->tenant_id !== null
-            && $user->hasAnyRole(['company-admin', 'hr', 'employee']);
+            && $user->hasAnyRole(['company-admin', 'hr', 'department-manager', 'employee']);
     }
 
     /**
@@ -49,7 +49,11 @@ class LeaveRequestPolicy
     public function update(User $user, LeaveRequest $leaveRequest): bool
     {
         return $this->belongsToUsersTenant($user, $leaveRequest->tenant_id)
-            && ($user->hasAnyRole(['company-admin', 'hr']) || $this->isOwnRequest($user, $leaveRequest));
+            && (
+                $user->hasAnyRole(['company-admin', 'hr'])
+                || $this->isOwnRequest($user, $leaveRequest)
+                || $this->isDepartmentManagerOfRequestOwner($user, $leaveRequest)
+            );
     }
 
     /**
@@ -58,7 +62,10 @@ class LeaveRequestPolicy
     public function delete(User $user, LeaveRequest $leaveRequest): bool
     {
         return $this->belongsToUsersTenant($user, $leaveRequest->tenant_id)
-            && $user->isCompanyAdmin();
+            && (
+                $user->isCompanyAdmin()
+                || $this->isDepartmentManagerOfRequestOwner($user, $leaveRequest)
+            );
     }
 
     public function deleteAny(User $user): bool
@@ -120,6 +127,17 @@ class LeaveRequestPolicy
     {
         return $leaveRequest->user_id !== null
             && (string) $leaveRequest->user_id === (string) $user->getKey();
+    }
+
+    private function isDepartmentManagerOfRequestOwner(User $user, LeaveRequest $leaveRequest): bool
+    {
+        if (! $user->isDepartmentManager()) {
+            return false;
+        }
+
+        $owner = $leaveRequest->user;
+
+        return $owner instanceof User && $user->managesUser($owner);
     }
 
     private function belongsToUsersTenant(User $user, int|string|null $tenantId): bool

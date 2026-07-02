@@ -23,6 +23,10 @@ class UserPolicy
 
     public function view(User $user, User $targetUser): bool
     {
+        if ($this->isProtectedSuperAdmin($user, $targetUser)) {
+            return false;
+        }
+
         return $this->belongsToUsersTenant($user, $targetUser->tenant_id)
             && $this->canViewUser($user, $targetUser);
     }
@@ -35,12 +39,48 @@ class UserPolicy
 
     public function update(User $user, User $targetUser): bool
     {
+        if ($this->isProtectedSuperAdmin($user, $targetUser)) {
+            return false;
+        }
+
         return $this->belongsToUsersTenant($user, $targetUser->tenant_id)
-            && ($user->hasAnyRole(['company-admin', 'hr']) || $user->managesUser($targetUser));
+            && $this->canUpdateUser($user, $targetUser);
+    }
+
+    public function resetPassword(User $user, User $targetUser): bool
+    {
+        if ($this->isProtectedSuperAdmin($user, $targetUser)) {
+            return false;
+        }
+
+        return $this->belongsToUsersTenant($user, $targetUser->tenant_id)
+            && $this->canUpdateUser($user, $targetUser);
+    }
+
+    public function viewOwnProfile(User $user, User $targetUser): bool
+    {
+        return $this->belongsToUsersTenant($user, $targetUser->tenant_id)
+            && $this->isSameUser($user, $targetUser);
+    }
+
+    public function updateOwnProfile(User $user, User $targetUser): bool
+    {
+        return $this->belongsToUsersTenant($user, $targetUser->tenant_id)
+            && $this->isSameUser($user, $targetUser);
+    }
+
+    public function updateOwnPassword(User $user, User $targetUser): bool
+    {
+        return $this->belongsToUsersTenant($user, $targetUser->tenant_id)
+            && $this->isSameUser($user, $targetUser);
     }
 
     public function delete(User $user, User $targetUser): bool
     {
+        if ($this->isProtectedSuperAdmin($user, $targetUser)) {
+            return false;
+        }
+
         return $this->belongsToUsersTenant($user, $targetUser->tenant_id)
             && $user->isCompanyAdmin();
     }
@@ -77,8 +117,23 @@ class UserPolicy
             || $user->managesUser($targetUser);
     }
 
+    private function canUpdateUser(User $user, User $targetUser): bool
+    {
+        return $user->hasAnyRole(['company-admin', 'hr']);
+    }
+
     private function belongsToUsersTenant(User $user, int|string|null $tenantId): bool
     {
         return $user->sharesTenantWithModel($tenantId);
+    }
+
+    private function isSameUser(User $user, User $targetUser): bool
+    {
+        return (string) $user->getKey() === (string) $targetUser->getKey();
+    }
+
+    private function isProtectedSuperAdmin(User $user, User $targetUser): bool
+    {
+        return $targetUser->isSuperAdmin() && ! $user->isSuperAdmin();
     }
 }

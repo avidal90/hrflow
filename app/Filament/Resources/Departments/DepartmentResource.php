@@ -6,6 +6,7 @@ use App\Filament\Resources\Departments\Pages\CreateDepartment;
 use App\Filament\Resources\Departments\Pages\EditDepartment;
 use App\Filament\Resources\Departments\Pages\ListDepartments;
 use App\Filament\Resources\Departments\Pages\ViewDepartment;
+use App\Filament\Resources\Departments\RelationManagers\UsersRelationManager;
 use App\Filament\Resources\Departments\Schemas\DepartmentForm;
 use App\Filament\Resources\Departments\Schemas\DepartmentInfolist;
 use App\Filament\Resources\Departments\Tables\DepartmentsTable;
@@ -22,6 +23,10 @@ use Illuminate\Support\Facades\Auth;
 class DepartmentResource extends Resource
 {
     protected static ?string $model = Department::class;
+
+    protected static ?string $modelLabel = 'departamento';
+
+    protected static ?string $pluralModelLabel = 'departamentos';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
@@ -42,6 +47,13 @@ class DepartmentResource extends Resource
         return DepartmentsTable::configure($table);
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->can('viewAny', Department::class);
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()->with(['tenant', 'manager']);
@@ -57,7 +69,7 @@ class DepartmentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            UsersRelationManager::class,
         ];
     }
 

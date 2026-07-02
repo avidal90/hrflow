@@ -14,32 +14,33 @@ class UserApiTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_hr_can_create_user_employee_with_valid_department(): void
+    public function test_company_admin_can_create_user_employee_with_valid_department(): void
     {
         $tenant = Tenant::factory()->create();
 
         $this->seedRoles();
 
-        $hrUser = User::factory()->create([
+        $companyAdmin = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        $hrUser->assignRole('hr');
+        $companyAdmin->assignRole('company-admin');
 
         $department = Department::factory()->create([
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        Sanctum::actingAs($hrUser);
+        Sanctum::actingAs($companyAdmin);
 
         $response = $this->postJson('/api/users', [
             'name' => 'Ana Lopez',
             'email' => 'ana.lopez@example.test',
-            'password' => 'password123',
+            'password' => 'Password123!',
             'department_id' => $department->getKey(),
             'employee_code' => 'EMP-1000',
             'hire_date' => '2026-01-01',
             'employment_status' => 'active',
+            'annual_vacation_days' => 25,
             'job_title' => 'HR Specialist',
         ]);
 
@@ -47,6 +48,7 @@ class UserApiTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('employee_code', 'EMP-1000')
             ->assertJsonPath('name', 'Ana Lopez')
+            ->assertJsonPath('annual_vacation_days', 25)
             ->assertJsonPath('tenant_id', (string) $tenant->getKey());
 
         $this->assertDatabaseHas('users', [
@@ -56,33 +58,34 @@ class UserApiTest extends TestCase
         ]);
     }
 
-    public function test_employee_creation_rejects_department_from_other_tenant(): void
+    public function test_company_admin_creation_rejects_department_from_other_tenant(): void
     {
         $tenant = Tenant::factory()->create();
         $otherTenant = Tenant::factory()->create();
 
         $this->seedRoles();
 
-        $hrUser = User::factory()->create([
+        $companyAdmin = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        $hrUser->assignRole('hr');
+        $companyAdmin->assignRole('company-admin');
 
         $foreignDepartment = Department::factory()->create([
             'tenant_id' => $otherTenant->getKey(),
         ]);
 
-        Sanctum::actingAs($hrUser);
+        Sanctum::actingAs($companyAdmin);
 
         $response = $this->postJson('/api/users', [
             'name' => 'Juan Perez',
             'email' => 'juan.perez@example.test',
-            'password' => 'password123',
+            'password' => 'Password123!',
             'department_id' => $foreignDepartment->getKey(),
             'employee_code' => 'EMP-2000',
             'hire_date' => '2026-01-01',
             'employment_status' => 'active',
+            'annual_vacation_days' => 23,
         ]);
 
         $response->assertUnprocessable()->assertJsonValidationErrors(['department_id']);
@@ -119,16 +122,18 @@ class UserApiTest extends TestCase
             'email' => $employee->email,
             'hire_date' => $employee->hire_date?->format('Y-m-d'),
             'employment_status' => 'inactive',
+            'annual_vacation_days' => 28,
             'job_title' => 'Analyst',
         ]);
 
         $response
             ->assertOk()
             ->assertJsonPath('name', 'Carmen Ruiz')
+            ->assertJsonPath('annual_vacation_days', 28)
             ->assertJsonPath('employment_status', 'inactive');
     }
 
-    public function test_employee_creation_is_rejected_when_tenant_reaches_license_limit(): void
+    public function test_company_admin_creation_is_rejected_when_tenant_reaches_license_limit(): void
     {
         $tenant = Tenant::factory()->create([
             'employee_license_limit' => 2,
@@ -136,11 +141,11 @@ class UserApiTest extends TestCase
 
         $this->seedRoles();
 
-        $hrUser = User::factory()->create([
+        $companyAdmin = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        $hrUser->assignRole('hr');
+        $companyAdmin->assignRole('company-admin');
 
         $department = Department::factory()->create([
             'tenant_id' => $tenant->getKey(),
@@ -151,22 +156,23 @@ class UserApiTest extends TestCase
             'department_id' => $department->getKey(),
         ]);
 
-        Sanctum::actingAs($hrUser);
+        Sanctum::actingAs($companyAdmin);
 
         $response = $this->postJson('/api/users', [
             'name' => 'Lara Martin',
             'email' => 'lara.martin@example.test',
-            'password' => 'password123',
+            'password' => 'Password123!',
             'department_id' => $department->getKey(),
             'employee_code' => 'EMP-9000',
             'hire_date' => '2026-01-01',
             'employment_status' => 'active',
+            'annual_vacation_days' => 23,
         ]);
 
         $response->assertUnprocessable()->assertJsonValidationErrors(['tenant_id']);
     }
 
-    public function test_employee_creation_is_allowed_when_tenant_has_unlimited_licenses(): void
+    public function test_company_admin_creation_is_allowed_when_tenant_has_unlimited_licenses(): void
     {
         $tenant = Tenant::factory()->create([
             'employee_license_limit' => null,
@@ -174,11 +180,11 @@ class UserApiTest extends TestCase
 
         $this->seedRoles();
 
-        $hrUser = User::factory()->create([
+        $companyAdmin = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
         ]);
 
-        $hrUser->assignRole('hr');
+        $companyAdmin->assignRole('company-admin');
 
         $department = Department::factory()->create([
             'tenant_id' => $tenant->getKey(),
@@ -189,23 +195,99 @@ class UserApiTest extends TestCase
             'department_id' => $department->getKey(),
         ]);
 
-        Sanctum::actingAs($hrUser);
+        Sanctum::actingAs($companyAdmin);
 
         $response = $this->postJson('/api/users', [
             'name' => 'Nora Sanchez',
             'email' => 'nora.sanchez@example.test',
-            'password' => 'password123',
+            'password' => 'Password123!',
             'department_id' => $department->getKey(),
             'employee_code' => 'EMP-9001',
             'hire_date' => '2026-01-01',
             'employment_status' => 'active',
+            'annual_vacation_days' => 24,
         ]);
 
         $response
             ->assertCreated()
             ->assertJsonPath('employee_code', 'EMP-9001')
             ->assertJsonPath('name', 'Nora Sanchez')
+            ->assertJsonPath('annual_vacation_days', 24)
             ->assertJsonPath('tenant_id', (string) $tenant->getKey());
+    }
+
+    public function test_hr_can_create_users(): void
+    {
+        $tenant = Tenant::factory()->create();
+
+        $this->seedRoles();
+
+        $hrUser = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+        $hrUser->assignRole('hr');
+
+        $department = Department::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+
+        Sanctum::actingAs($hrUser);
+
+        $response = $this->postJson('/api/users', [
+            'name' => 'Usuario RRHH',
+            'email' => 'usuario.rrhh@example.test',
+            'password' => 'Password123!',
+            'department_id' => $department->getKey(),
+            'employee_code' => 'EMP-HR-01',
+            'hire_date' => '2026-01-01',
+            'employment_status' => 'active',
+            'annual_vacation_days' => 23,
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('email', 'usuario.rrhh@example.test');
+    }
+
+    public function test_super_admin_creation_is_rejected_when_tenant_reaches_license_limit(): void
+    {
+        $tenant = Tenant::factory()->create([
+            'employee_license_limit' => 1,
+        ]);
+
+        $principalTenant = Tenant::ensurePrincipalTenant();
+
+        $this->seedRoles();
+
+        $superAdmin = User::factory()->create([
+            'tenant_id' => $principalTenant->getKey(),
+        ]);
+        $superAdmin->assignRole('super-admin');
+
+        $department = Department::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'department_id' => $department->getKey(),
+        ]);
+
+        Sanctum::actingAs($superAdmin);
+
+        $response = $this->postJson('/api/users', [
+            'tenant_id' => (string) $tenant->getKey(),
+            'name' => 'Usuario bloqueado',
+            'email' => 'usuario.bloqueado@example.test',
+            'password' => 'Password123!',
+            'department_id' => $department->getKey(),
+            'employee_code' => 'EMP-LIMIT',
+            'hire_date' => '2026-01-01',
+            'employment_status' => 'active',
+            'annual_vacation_days' => 23,
+        ]);
+
+        $response->assertUnprocessable()->assertJsonValidationErrors(['tenant_id']);
     }
 
     private function seedRoles(): void

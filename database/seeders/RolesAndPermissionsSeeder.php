@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Permission;
 use App\Models\Role;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\PermissionRegistrar;
@@ -143,6 +144,9 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         if ($superAdmin instanceof User) {
+            $superAdmin->forceFill([
+                'tenant_id' => Tenant::ensurePrincipalTenant()->getKey(),
+            ])->save();
             $superAdmin->assignRole('super-admin');
         }
 

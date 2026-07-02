@@ -49,7 +49,7 @@ class DepartmentPolicy
     public function update(User $user, Department $department): bool
     {
         return $this->belongsToUsersTenant($user, $department->tenant_id)
-            && ($user->hasAnyRole(['company-admin', 'hr']) || $user->managesDepartment($department));
+            && $user->hasAnyRole(['company-admin', 'hr']);
     }
 
     /**
@@ -110,6 +110,15 @@ class DepartmentPolicy
     {
         return $user->hasAnyRole(['company-admin', 'hr'])
             || $user->managesDepartment($department);
+    }
+
+    /**
+     * Determine whether the user can manage members of the department.
+     */
+    public function manageMembers(User $user, Department $department): bool
+    {
+        return $this->belongsToUsersTenant($user, $department->tenant_id)
+            && $user->hasAnyRole(['company-admin', 'hr']);
     }
 
     private function belongsToUsersTenant(User $user, int|string|null $tenantId): bool

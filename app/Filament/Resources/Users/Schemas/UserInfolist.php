@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -11,6 +13,10 @@ class UserInfolist
     {
         return $schema
             ->components([
+                ImageEntry::make('avatar_path')
+                    ->label('Foto')
+                    ->disk('public')
+                    ->circular(),
                 TextEntry::make('tenant.name')
                     ->label('Empresa'),
                 TextEntry::make('name')
@@ -19,6 +25,9 @@ class UserInfolist
                     ->label('Email'),
                 TextEntry::make('department.name')
                     ->label('Departamento'),
+                TextEntry::make('role_name')
+                    ->label('Rol')
+                    ->state(fn (User $record): string => $record->primaryRoleLabel()),
                 TextEntry::make('employee_code')
                     ->label('Codigo'),
                 TextEntry::make('hire_date')
@@ -26,6 +35,8 @@ class UserInfolist
                     ->date(),
                 TextEntry::make('employment_status')
                     ->label('Estado laboral'),
+                TextEntry::make('annual_vacation_days')
+                    ->label('Dias de vacaciones asignados'),
                 TextEntry::make('job_title')
                     ->label('Puesto')
                     ->placeholder('-'),
