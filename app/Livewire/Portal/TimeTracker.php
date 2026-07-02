@@ -66,6 +66,7 @@ class TimeTracker extends Component
     public function render(): View
     {
         $user = auth()->user();
+        abort_unless($user instanceof User, 403);
 
         $recentEntries = TimeEntry::where('user_id', $user->id)
             ->where('tenant_id', $user->tenant_id)
