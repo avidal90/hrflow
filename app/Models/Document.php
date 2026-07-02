@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\DocumentCategory;
+use App\Enums\DocumentFolder;
 use App\Models\Concerns\BelongsToTenant;
 use App\Policies\DocumentPolicy;
 use Database\Factories\DocumentFactory;
@@ -13,14 +13,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'tenant_id',
     'user_id',
-    'category',
+    'uploaded_by_user_id',
+    'folder',
     'name',
     'description',
+    'disk',
     'file_path',
+    'original_filename',
     'mime_type',
     'file_size',
     'uploaded_at',
@@ -32,18 +37,62 @@ class Document extends Model
     /** @use HasFactory<DocumentFactory> */
     use BelongsToTenant, HasFactory, SoftDeletes;
 
+    public const STORAGE_DISK = 'documents';
+
+    protected static function booted(): void
+    {
+        static::forceDeleted(function (self $document): void {
+            self::deleteStoredFile($document->disk, $document->file_path);
+        });
+    }
+
     protected function casts(): array
     {
         return [
             'uploaded_at' => 'datetime',
             'is_visible_to_employee' => 'boolean',
-            'category' => DocumentCategory::class,
+            'folder' => DocumentFolder::class,
         ];
+    }
+
+    public static function buildStorageDirectory(string $tenantId, int|string $userId, string $folder): string
+    {
+        return 'tenant/'.$tenantId.'/'.$folder.'/user/'.$userId;
+    }
+
+    public static function buildStoragePath(string $tenantId, int|string $userId, string $folder, string $originalFilename): string
+    {
+        $extension = Str::lower(pathinfo($originalFilename, PATHINFO_EXTENSION));
+        $filename = now()->format('Ymd_His').'_'.Str::lower(Str::random(8));
+
+        if ($extension !== '') {
+            $filename .= '.'.$extension;
+        }
+
+        return self::buildStorageDirectory($tenantId, $userId, $folder).'/'.$filename;
+    }
+
+    public static function deleteStoredFile(?string $disk, ?string $path): void
+    {
+        if (blank($path)) {
+            return;
+        }
+
+        $storageDisk = $disk ?: self::STORAGE_DISK;
+
+        if (Storage::disk($storageDisk)->exists($path)) {
+            Storage::disk($storageDisk)->delete($path);
+        }
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function uploadedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'uploaded_by_user_id');
     }
 
     public function tenant(): BelongsTo
@@ -61,18 +110,6 @@ class Document extends Model
 
         if ($user->isCompanyAdmin() || $user->isHr()) {
             return $query;
-        }
-
-        if ($user->isDepartmentManager()) {
-            return $query->whereHas('user.department', function (Builder $departmentQuery) use ($user): void {
-                $departmentQuery->where('manager_user_id', $user->getKey());
-            });
-        }
-
-        if ($user->hasRole('employee')) {
-            return $query
-                ->where('is_visible_to_employee', true)
-                ->where('user_id', $user->getKey());
         }
 
         return $query->whereRaw('1 = 0');

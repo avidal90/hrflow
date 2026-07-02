@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\Departments\Tables;
 
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class DepartmentsTable
@@ -37,7 +40,17 @@ class DepartmentsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('tenant_id')
+                    ->label('Empresa')
+                    ->relationship('tenant', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn (): bool => self::currentUserIsSuperAdmin()),
+                SelectFilter::make('manager_user_id')
+                    ->label('Responsable')
+                    ->relationship('manager', 'name', fn (Builder $query): Builder => self::scopeVisibleUsers($query))
+                    ->searchable()
+                    ->preload(),
             ])
             ->defaultSort('name')
             ->recordActions([
@@ -53,8 +66,24 @@ class DepartmentsTable
 
     private static function currentUserIsSuperAdmin(): bool
     {
+        return self::currentUser()?->isSuperAdmin() ?? false;
+    }
+
+    private static function currentUser(): ?User
+    {
         $user = Auth::user();
 
-        return $user instanceof \App\Models\User && $user->isSuperAdmin();
+        return $user instanceof User ? $user : null;
+    }
+
+    private static function scopeVisibleUsers(Builder $query): Builder
+    {
+        $user = self::currentUser();
+
+        if (! $user instanceof User) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->visibleTo($user);
     }
 }

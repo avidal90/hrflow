@@ -3,8 +3,10 @@
 namespace Tests\Feature\Authorization;
 
 use App\Models\Department;
+use App\Models\LeaveRequest;
 use App\Models\Role;
 use App\Models\Tenant;
+use App\Models\Turno;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
@@ -51,13 +53,13 @@ class PolicyAuthorizationTest extends TestCase
         $this->assertTrue($companyAdmin->can('viewAny', Tenant::class));
         $this->assertTrue($companyAdmin->can('view', $tenant));
         $this->assertFalse($companyAdmin->can('view', $otherTenant));
-        $this->assertTrue($companyAdmin->can('update', $tenant));
+        $this->assertFalse($companyAdmin->can('update', $tenant));
         $this->assertFalse($companyAdmin->can('update', $otherTenant));
         $this->assertFalse($companyAdmin->can('create', Tenant::class));
         $this->assertFalse($companyAdmin->can('delete', $tenant));
 
-        $this->assertTrue($hrUser->can('viewAny', Tenant::class));
-        $this->assertTrue($hrUser->can('view', $tenant));
+        $this->assertFalse($hrUser->can('viewAny', Tenant::class));
+        $this->assertFalse($hrUser->can('view', $tenant));
         $this->assertFalse($hrUser->can('update', $tenant));
 
         $this->assertTrue($companyAdmin->can('viewAny', Department::class));
@@ -72,6 +74,18 @@ class PolicyAuthorizationTest extends TestCase
         $this->assertTrue($hrUser->can('update', $department));
         $this->assertFalse($hrUser->can('delete', $department));
 
+        $turno = Turno::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+
+        $this->assertTrue($companyAdmin->can('viewAny', Turno::class));
+        $this->assertTrue($companyAdmin->can('create', Turno::class));
+        $this->assertTrue($companyAdmin->can('update', $turno));
+
+        $this->assertTrue($hrUser->can('viewAny', Turno::class));
+        $this->assertFalse($hrUser->can('create', Turno::class));
+        $this->assertFalse($hrUser->can('update', $turno));
+
         $this->assertTrue($companyAdmin->can('viewAny', User::class));
         $this->assertTrue($companyAdmin->can('create', User::class));
         $this->assertTrue($companyAdmin->can('view', $employee));
@@ -82,6 +96,7 @@ class PolicyAuthorizationTest extends TestCase
 
         $this->assertTrue($hrUser->can('viewAny', User::class));
         $this->assertTrue($hrUser->can('create', User::class));
+        $this->assertTrue($hrUser->can('view', $employee));
         $this->assertTrue($hrUser->can('update', $employee));
         $this->assertFalse($hrUser->can('delete', $employee));
     }
@@ -140,7 +155,7 @@ class PolicyAuthorizationTest extends TestCase
         $this->assertTrue($managerUser->can('view', $managedDepartment));
         $this->assertFalse($managerUser->can('view', $otherDepartment));
         $this->assertFalse($managerUser->can('view', $externalDepartment));
-        $this->assertTrue($managerUser->can('update', $managedDepartment));
+        $this->assertFalse($managerUser->can('update', $managedDepartment));
         $this->assertFalse($managerUser->can('update', $otherDepartment));
         $this->assertFalse($managerUser->can('delete', $managedDepartment));
 
@@ -149,9 +164,27 @@ class PolicyAuthorizationTest extends TestCase
         $this->assertTrue($managerUser->can('view', $managedEmployee));
         $this->assertFalse($managerUser->can('view', $unmanagedEmployee));
         $this->assertFalse($managerUser->can('view', $externalEmployee));
-        $this->assertTrue($managerUser->can('update', $managedEmployee));
+        $this->assertFalse($managerUser->can('update', $managedEmployee));
         $this->assertFalse($managerUser->can('update', $unmanagedEmployee));
         $this->assertFalse($managerUser->can('delete', $managedEmployee));
+
+        $managedRequest = LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $managedEmployee->getKey(),
+        ]);
+        $unmanagedRequest = LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $unmanagedEmployee->getKey(),
+        ]);
+
+        $this->assertTrue($managerUser->can('viewAny', LeaveRequest::class));
+        $this->assertTrue($managerUser->can('create', LeaveRequest::class));
+        $this->assertTrue($managerUser->can('view', $managedRequest));
+        $this->assertFalse($managerUser->can('view', $unmanagedRequest));
+        $this->assertTrue($managerUser->can('update', $managedRequest));
+        $this->assertFalse($managerUser->can('update', $unmanagedRequest));
+        $this->assertTrue($managerUser->can('delete', $managedRequest));
+        $this->assertFalse($managerUser->can('delete', $unmanagedRequest));
     }
 
     public function test_tenant_scope_filters_queries_and_assigns_tenant_id_automatically(): void
@@ -249,6 +282,28 @@ class PolicyAuthorizationTest extends TestCase
         $this->assertTrue($superAdmin->can('view', $otherTenant));
         $this->assertTrue($superAdmin->can('delete', $department));
         $this->assertTrue($superAdmin->can('update', $employee));
+    }
+
+    public function test_company_admin_cannot_manage_a_super_admin_even_if_they_share_tenant(): void
+    {
+        $tenant = Tenant::ensurePrincipalTenant();
+
+        $this->createRoles();
+
+        $companyAdmin = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+        $companyAdmin->assignRole('company-admin');
+
+        $superAdmin = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+        $superAdmin->assignRole('super-admin');
+
+        $this->assertFalse($companyAdmin->can('view', $superAdmin));
+        $this->assertFalse($companyAdmin->can('update', $superAdmin));
+        $this->assertFalse($companyAdmin->can('resetPassword', $superAdmin));
+        $this->assertFalse($companyAdmin->can('delete', $superAdmin));
     }
 
     private function createRoles(): void

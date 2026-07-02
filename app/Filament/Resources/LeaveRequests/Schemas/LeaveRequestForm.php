@@ -42,6 +42,12 @@ class LeaveRequestForm
                                 $query->where('tenant_id', $tenantId);
                             }
 
+                            $actingUser = Auth::user();
+
+                            if ($actingUser instanceof User && $actingUser->isDepartmentManager()) {
+                                $query->where('department_id', $actingUser->department_id);
+                            }
+
                             $query->orderBy('name');
                         },
                     )

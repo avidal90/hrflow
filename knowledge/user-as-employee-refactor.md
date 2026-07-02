@@ -215,12 +215,14 @@ No se disenan escenarios adicionales como:
 ### Administrador de tenant
 
 - acceso a Filament: si
+- acceso al portal del empleado: si
 - alcance: solo su tenant
 - puede gestionar usuarios, departamentos, turnos, documentos y solicitudes del tenant
 
 ### Jefe de departamento
 
 - acceso a Filament: si
+- acceso al portal del empleado: si
 - alcance: solo su tenant y solo los usuarios de su departamento cuando aplique
 - puede consultar y operar sobre equipo propio segun policy
 
@@ -229,6 +231,13 @@ No se disenan escenarios adicionales como:
 - acceso a Filament: no
 - acceso al portal del empleado: si
 - alcance: solo sus propios datos y operaciones
+
+## Decision UX de acceso
+
+- El portal del empleado y el backoffice mantienen accesos separados.
+- El portal se abre desde una URL tenant-aware para preservar el contexto de empresa.
+- El login administrativo se reserva al backoffice.
+- Si un usuario tiene permisos administrativos y tambien opera como empleado, puede entrar al portal y saltar desde ahi a la zona administrativa.
 
 ## Reglas de autorizacion obligatorias
 

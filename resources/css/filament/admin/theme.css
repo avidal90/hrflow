@@ -1,0 +1,49 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+.fi-body,
+.fi-layout,
+.fi-main,
+.fi-page {
+    background-color: #f8fafc;
+    color: #1e293b;
+}
+
+.fi-topbar {
+    background-color: #2563eb;
+    box-shadow: none;
+    color: #ffffff;
+    ring-color: transparent;
+}
+
+.fi-topbar .fi-icon,
+.fi-topbar .fi-topbar-item-label,
+.fi-topbar .fi-breadcrumbs-item-label,
+.fi-topbar .fi-user-menu-trigger,
+.fi-topbar .fi-icon-btn {
+    color: #ffffff;
+}
+
+.fi-topbar .fi-topbar-item-btn,
+.fi-topbar .fi-icon-btn {
+    color: #ffffff;
+}
+
+.fi-topbar .fi-topbar-item-btn:hover,
+.fi-topbar .fi-topbar-item-btn:focus-visible,
+.fi-topbar .fi-icon-btn:hover,
+.fi-topbar .fi-icon-btn:focus-visible {
+    background-color: rgb(255 255 255 / 12%);
+}
+
+.fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-btn {
+    background-color: rgb(255 255 255 / 18%);
+}
+
+.fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
+.fi-topbar .fi-topbar-item.fi-active .fi-icon,
+.fi-topbar .fi-icon-btn .fi-icon {
+    color: #ffffff;
+}

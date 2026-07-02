@@ -23,6 +23,10 @@ class TurnoResource extends Resource
 {
     protected static ?string $model = Turno::class;
 
+    protected static ?string $modelLabel = 'turno';
+
+    protected static ?string $pluralModelLabel = 'turnos';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Turnos';
@@ -40,6 +44,13 @@ class TurnoResource extends Resource
     public static function table(Table $table): Table
     {
         return TurnosTable::configure($table);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->can('viewAny', Turno::class);
     }
 
     public static function getEloquentQuery(): Builder

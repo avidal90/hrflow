@@ -14,6 +14,8 @@ class DemoTenantsSeeder extends Seeder
      */
     public function run(): void
     {
+        $principalTenant = Tenant::ensurePrincipalTenant();
+
         $northwind = Tenant::query()->firstOrCreate(
             ['id' => 'northwind-demo'],
             [
@@ -51,12 +53,16 @@ class DemoTenantsSeeder extends Seeder
         $superAdmin = User::query()->firstOrCreate(
             ['email' => 'admin@hrflow.local'],
             [
-                'tenant_id' => $northwind->getKey(),
+                'tenant_id' => $principalTenant->getKey(),
                 'name' => 'Admin HRFlow',
                 'password' => 'password',
                 'email_verified_at' => now(),
             ]
         );
+
+        $superAdmin->forceFill([
+            'tenant_id' => $principalTenant->getKey(),
+        ])->save();
 
         $northwindCompanyAdmin = User::query()->firstOrCreate(
             ['email' => 'ana.gomez@northwind.local'],

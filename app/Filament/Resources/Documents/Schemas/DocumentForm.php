@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\Documents\Schemas;
 
-use App\Enums\DocumentCategory;
+use App\Enums\DocumentFolder;
+use App\Models\Document;
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -51,31 +53,35 @@ class DocumentForm
                     ->searchable(['name', 'email', 'employee_code'])
                     ->preload()
                     ->required(),
-                Select::make('category')
-                    ->label('Categoria')
-                    ->options(DocumentCategory::options())
+                Select::make('folder')
+                    ->label('Carpeta')
+                    ->options(DocumentFolder::options())
+                    ->default(DocumentFolder::Other->value)
                     ->required(),
                 TextInput::make('name')
                     ->label('Nombre')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('file_path')
-                    ->label('Ruta de archivo')
-                    ->required()
-                    ->maxLength(500)
+                FileUpload::make('file_path')
+                    ->label('Archivo')
+                    ->disk(Document::STORAGE_DISK)
+                    ->directory('tmp/documents')
+                    ->preserveFilenames()
+                    ->visibility('private')
+                    ->acceptedFileTypes([
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                        'application/vnd.oasis.opendocument.text',
+                    ])
+                    ->maxSize(20480)
+                    ->helperText('Maximo 20 MB por documento.')
+                    ->required(fn (string $operation): bool => $operation === 'create')
                     ->columnSpanFull(),
-                TextInput::make('mime_type')
-                    ->label('Tipo MIME')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('file_size')
-                    ->label('Tamano (bytes)')
-                    ->required()
-                    ->numeric()
-                    ->minValue(1),
                 DateTimePicker::make('uploaded_at')
                     ->label('Fecha de subida')
-                    ->required()
+                    ->disabled()
+                    ->dehydrated(false)
                     ->seconds(false)
                     ->default(now()),
                 Toggle::make('is_visible_to_employee')
@@ -85,6 +91,21 @@ class DocumentForm
                     ->label('Descripcion')
                     ->maxLength(2000)
                     ->columnSpanFull(),
+                TextInput::make('original_filename')
+                    ->label('Nombre original')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->visible(fn (?Model $record): bool => $record !== null),
+                TextInput::make('mime_type')
+                    ->label('Tipo MIME')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->visible(fn (?Model $record): bool => $record !== null),
+                TextInput::make('file_size')
+                    ->label('Tamano (bytes)')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->visible(fn (?Model $record): bool => $record !== null),
             ])
             ->columns(2);
     }

@@ -8,7 +8,9 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TenantsTable
 {
@@ -55,7 +57,31 @@ class TenantsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('status')
+                    ->label('Estado')
+                    ->options([
+                        'active' => 'Activa',
+                        'inactive' => 'Inactiva',
+                    ]),
+                SelectFilter::make('locale')
+                    ->label('Idioma')
+                    ->options([
+                        'es' => 'Espanol',
+                        'en' => 'English',
+                    ]),
+                SelectFilter::make('license_limit_state')
+                    ->label('Licencias')
+                    ->options([
+                        'limited' => 'Con limite',
+                        'unlimited' => 'Ilimitadas',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return match ($data['value'] ?? null) {
+                            'limited' => $query->whereNotNull('employee_license_limit'),
+                            'unlimited' => $query->whereNull('employee_license_limit'),
+                            default => $query,
+                        };
+                    }),
             ])
             ->defaultSort('name')
             ->recordActions([

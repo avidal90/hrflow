@@ -24,6 +24,10 @@ class LeaveRequestResource extends Resource
 {
     protected static ?string $model = LeaveRequest::class;
 
+    protected static ?string $modelLabel = 'solicitud';
+
+    protected static ?string $pluralModelLabel = 'solicitudes';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Solicitudes';
@@ -41,6 +45,13 @@ class LeaveRequestResource extends Resource
     public static function table(Table $table): Table
     {
         return LeaveRequestsTable::configure($table);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->can('viewAny', LeaveRequest::class);
     }
 
     public static function getEloquentQuery(): Builder

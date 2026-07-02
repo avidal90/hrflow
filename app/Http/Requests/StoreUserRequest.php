@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Department;
 use App\Models\User;
+use App\Support\Validation\PasswordRules;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -50,9 +51,10 @@ class StoreUserRequest extends FormRequest
             ],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', PasswordRules::user()],
             'hire_date' => ['required', 'date'],
             'employment_status' => ['required', 'string', Rule::in(['active', 'inactive', 'on_leave', 'terminated'])],
+            'annual_vacation_days' => ['required', 'integer', 'min:0', 'max:365'],
             'job_title' => ['nullable', 'string', 'max:255'],
         ];
     }

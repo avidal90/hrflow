@@ -31,13 +31,13 @@ class TurnoPolicy
     public function create(User $user): bool
     {
         return $user->tenant_id !== null
-            && $user->hasAnyRole(['company-admin', 'hr']);
+            && $user->isCompanyAdmin();
     }
 
     public function update(User $user, Turno $turno): bool
     {
         return $this->belongsToUsersTenant($user, $turno->tenant_id)
-            && $user->hasAnyRole(['company-admin', 'hr']);
+            && $user->isCompanyAdmin();
     }
 
     public function delete(User $user, Turno $turno): bool

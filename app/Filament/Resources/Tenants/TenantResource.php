@@ -23,6 +23,10 @@ class TenantResource extends Resource
 {
     protected static ?string $model = Tenant::class;
 
+    protected static ?string $modelLabel = 'empresa';
+
+    protected static ?string $pluralModelLabel = 'empresas';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Empresas';
@@ -42,6 +46,13 @@ class TenantResource extends Resource
         return TenantsTable::configure($table);
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->can('viewAny', Tenant::class);
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()->withCount('users');
@@ -55,7 +66,7 @@ class TenantResource extends Resource
             return $query;
         }
 
-        if ($user->tenant_id === null) {
+        if ($user->tenant_id === null || ! $user->isCompanyAdmin()) {
             return $query->whereRaw('1 = 0');
         }
 

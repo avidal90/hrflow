@@ -6,6 +6,9 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Filament\Resources\Users\RelationManagers\DocumentsRelationManager;
+use App\Filament\Resources\Users\RelationManagers\LeaveRequestsRelationManager;
+use App\Filament\Resources\Users\RelationManagers\TimeEntriesRelationManager;
 use App\Filament\Resources\Users\RelationManagers\TurnoAssignmentsRelationManager;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Schemas\UserInfolist;
@@ -22,6 +25,10 @@ use Illuminate\Support\Facades\Auth;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
+    protected static ?string $modelLabel = 'usuario';
+
+    protected static ?string $pluralModelLabel = 'usuarios';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
@@ -42,12 +49,19 @@ class UserResource extends Resource
         return UsersTable::configure($table);
     }
 
-    public static function getEloquentQuery(): Builder
+    public static function shouldRegisterNavigation(): bool
     {
-        $query = parent::getEloquentQuery()->with(['tenant', 'department'])->whereNotNull('tenant_id');
         $user = Auth::user();
 
-        if (! $user instanceof User) {
+        return $user instanceof User && $user->can('viewAny', User::class);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()->with(['tenant', 'department', 'roles'])->whereNotNull('tenant_id');
+        $user = Auth::user();
+
+        if (! $user instanceof User || ! $user->can('viewAny', User::class)) {
             return $query->whereRaw('1 = 0');
         }
 
@@ -57,6 +71,9 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
+            TimeEntriesRelationManager::class,
+            LeaveRequestsRelationManager::class,
+            DocumentsRelationManager::class,
             TurnoAssignmentsRelationManager::class,
         ];
     }

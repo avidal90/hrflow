@@ -9,9 +9,12 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Resources\Pages\ViewRecord;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -20,6 +23,15 @@ class TurnoAssignmentsRelationManager extends RelationManager
     protected static string $relationship = 'turnoAssignments';
 
     protected static ?string $title = 'Turnos asignados';
+
+    public function isReadOnly(): bool
+    {
+        if (is_subclass_of($this->getPageClass(), ViewRecord::class)) {
+            return false;
+        }
+
+        return parent::isReadOnly();
+    }
 
     public function form(Schema $schema): Schema
     {
@@ -43,6 +55,7 @@ class TurnoAssignmentsRelationManager extends RelationManager
                     ->helperText('Dejar vacio para que la asignacion no tenga inicio definido.'),
                 DatePicker::make('valid_until')
                     ->label('Vigente hasta')
+                    ->afterOrEqual('valid_from')
                     ->helperText('Dejar vacio para que la asignacion sea permanente.'),
             ])
             ->columns(2);
@@ -65,12 +78,39 @@ class TurnoAssignmentsRelationManager extends RelationManager
                     ->date()
                     ->placeholder('Permanente'),
             ])
+            ->filters([
+                SelectFilter::make('turno_id')
+                    ->label('Turno')
+                    ->relationship(
+                        name: 'turno',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: function (Builder $query): void {
+                            $query->where('tenant_id', $this->getOwnerRecord()->tenant_id)
+                                ->orderBy('name');
+                        },
+                    )
+                    ->searchable()
+                    ->preload(),
+                Filter::make('active_now')
+                    ->label('Solo vigentes hoy')
+                    ->query(fn (Builder $query): Builder => $query
+                        ->where(function (Builder $rangeQuery): void {
+                            $rangeQuery->whereNull('valid_from')
+                                ->orWhereDate('valid_from', '<=', today());
+                        })
+                        ->where(function (Builder $rangeQuery): void {
+                            $rangeQuery->whereNull('valid_until')
+                                ->orWhereDate('valid_until', '>=', today());
+                        })),
+            ])
             ->defaultSort('valid_from', 'desc')
             ->headerActions([
-                CreateAction::make(),
+                CreateAction::make()
+                    ->mutateFormDataUsing(fn (array $data): array => $this->mutateFormData($data)),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->mutateFormDataUsing(fn (array $data): array => $this->mutateFormData($data)),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
@@ -78,5 +118,19 @@ class TurnoAssignmentsRelationManager extends RelationManager
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function mutateFormData(array $data): array
+    {
+        $ownerRecord = $this->getOwnerRecord();
+
+        $data['user_id'] = $ownerRecord->getKey();
+        $data['tenant_id'] = $ownerRecord->tenant_id;
+
+        return $data;
     }
 }

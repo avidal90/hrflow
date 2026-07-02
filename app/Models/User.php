@@ -7,6 +7,7 @@ use App\Policies\UserPolicy;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -21,13 +22,82 @@ use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['tenant_id', 'department_id', 'name', 'email', 'password', 'employee_code', 'hire_date', 'employment_status', 'job_title'])]
+#[Fillable(['tenant_id', 'department_id', 'name', 'email', 'password', 'employee_code', 'hire_date', 'employment_status', 'annual_vacation_days', 'job_title', 'avatar_path'])]
 #[Hidden(['password', 'remember_token'])]
 #[UsePolicy(UserPolicy::class)]
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
     use BelongsToTenant, HasApiTokens, HasFactory, HasRoles, Notifiable;
+
+    /**
+     * @return array<string, string>
+     */
+    public static function assignableRoleOptionsFor(?self $actingUser, ?self $targetUser = null): array
+    {
+        $tenantRoles = [
+            'company-admin' => 'Administrador de empresa',
+            'hr' => 'Recursos humanos',
+            'department-manager' => 'Responsable de departamento',
+            'employee' => 'Empleado',
+        ];
+
+        if ($actingUser?->isSuperAdmin()) {
+            return ['super-admin' => 'Superadministrador'] + $tenantRoles;
+        }
+
+        if ($actingUser?->isCompanyAdmin()) {
+            return $tenantRoles;
+        }
+
+        if ($targetUser instanceof self) {
+            $roleName = $targetUser->primaryRoleName();
+
+            if ($roleName !== null) {
+                return [$roleName => self::roleLabel($roleName)];
+            }
+        }
+
+        return [];
+    }
+
+    public static function roleLabel(?string $roleName): string
+    {
+        return match ($roleName) {
+            'super-admin' => 'Superadministrador',
+            'company-admin' => 'Administrador de empresa',
+            'hr' => 'Recursos humanos',
+            'department-manager' => 'Responsable de departamento',
+            'employee' => 'Empleado',
+            default => '-',
+        };
+    }
+
+    public function belongsToPrincipalTenant(): bool
+    {
+        return (string) $this->tenant_id === Tenant::principalTenantId();
+    }
+
+    public static function canManageRoleAssignments(?self $actingUser, ?self $targetUser = null): bool
+    {
+        if (! $actingUser instanceof self) {
+            return false;
+        }
+
+        if ($actingUser->isSuperAdmin()) {
+            return ! ($targetUser instanceof self && $actingUser->is($targetUser));
+        }
+
+        if (! $actingUser->isCompanyAdmin()) {
+            return false;
+        }
+
+        if (! $targetUser instanceof self) {
+            return true;
+        }
+
+        return ! $actingUser->is($targetUser) && ! $targetUser->isSuperAdmin();
+    }
 
     protected static function booted(): void
     {
@@ -77,6 +147,7 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'hire_date' => 'date',
+            'annual_vacation_days' => 'integer',
         ];
     }
 
@@ -135,7 +206,17 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasRole('super-admin');
     }
 
-    public function canAccessPanel(Panel $panel): bool
+    public function primaryRoleName(): ?string
+    {
+        return $this->roles->pluck('name')->first();
+    }
+
+    public function primaryRoleLabel(): string
+    {
+        return self::roleLabel($this->primaryRoleName());
+    }
+
+    public function canAccessAdministration(): bool
     {
         if ($this->isSuperAdmin()) {
             return true;
@@ -143,6 +224,22 @@ class User extends Authenticatable implements FilamentUser
 
         return $this->tenant_id !== null
             && $this->hasAnyRole(['company-admin', 'hr', 'department-manager']);
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->canAccessAdministration();
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        if (blank($this->avatar_path)) {
+            return null;
+        }
+
+        $publicDiskUrl = (string) config('filesystems.disks.public.url', '');
+
+        return rtrim($publicDiskUrl, '/').'/'.ltrim((string) $this->avatar_path, '/');
     }
 
     public function managesDepartment(Department $department): bool
@@ -170,6 +267,9 @@ class User extends Authenticatable implements FilamentUser
         }
 
         $query->where($query->getModel()->qualifyColumn('tenant_id'), $user->tenant_id);
+        $query->whereDoesntHave('roles', function (Builder $roleQuery): void {
+            $roleQuery->where('name', 'super-admin');
+        });
 
         if ($user->isCompanyAdmin() || $user->isHr()) {
             return $query;

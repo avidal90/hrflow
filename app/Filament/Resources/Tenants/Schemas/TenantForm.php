@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Tenants\Schemas;
 
+use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class TenantForm
 {
@@ -40,9 +42,18 @@ class TenantForm
                     ->integer()
                     ->minValue(1)
                     ->nullable()
+                    ->disabled(fn (): bool => ! self::currentUserIsSuperAdmin())
+                    ->dehydrated(fn (): bool => self::currentUserIsSuperAdmin())
                     ->helperText('Deja vacio este campo para licencias ilimitadas.')
                     ->default(null),
             ])
             ->columns(2);
+    }
+
+    private static function currentUserIsSuperAdmin(): bool
+    {
+        $user = Auth::user();
+
+        return $user instanceof User && $user->isSuperAdmin();
     }
 }
