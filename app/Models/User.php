@@ -268,7 +268,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         $today = CarbonImmutable::today();
 
-        if ($this->leaveRequests()
+        if ($this->tenant_id !== null && $this->leaveRequests()
+            ->where('tenant_id', $this->tenant_id)
             ->where('status', LeaveRequestStatus::Approved)
             ->whereDate('start_date', '<=', $today)
             ->whereDate('end_date', '>=', $today)
