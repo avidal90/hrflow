@@ -34,9 +34,15 @@ class UpcomingFestivosWidget extends TableWidget
                     ->formatStateUsing(fn ($state): string => ucfirst($state->translatedFormat('l, j \d\e F'))),
                 TextColumn::make('days_until')
                     ->label('En')
-                    ->state(fn (Festivo $record): string => today()->diffInDays($record->date) === 0
-                        ? 'Hoy'
-                        : 'En '.(int) today()->diffInDays($record->date).' días'),
+                    ->state(function (Festivo $record): string {
+                        $days = (int) today()->diffInDays($record->date);
+
+                        return match (true) {
+                            $days === 0 => 'Hoy',
+                            $days === 1 => 'En 1 día',
+                            default => "En {$days} días",
+                        };
+                    }),
             ])
             ->paginated(false);
     }
