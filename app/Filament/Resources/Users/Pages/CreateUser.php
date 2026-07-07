@@ -27,9 +27,18 @@ class CreateUser extends CreateRecord
     {
         $roleName = $this->selectedRoleName ?? 'employee';
 
-        $this->record->syncRoles([$roleName]);
+        $record = $this->getRecord();
+
+        if (! $record instanceof User) {
+            return;
+        }
+
+        $record->syncRoles([$roleName]);
     }
 
+    /**
+     * @param  array{role_name?: string}  $data
+     */
     private function extractSelectedRoleName(array $data): string
     {
         if (! User::canManageRoleAssignments(Auth::user())) {

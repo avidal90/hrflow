@@ -57,11 +57,18 @@ class UsersRelationManager extends RelationManager
             ->headerActions([
                 AssociateAction::make()
                     ->label('Añadir miembro')
-                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query
-                        ->whereNull('department_id')
-                        ->where('tenant_id', $this->getOwnerRecord()->tenant_id)
-                        ->whereDoesntHave('roles', fn (Builder $q) => $q->where('name', 'super-admin'))
-                    )
+                    ->recordSelectOptionsQuery(function (Builder $query): Builder {
+                        $ownerRecord = $this->getOwnerRecord();
+
+                        if (! $ownerRecord instanceof Department) {
+                            return $query->whereRaw('1 = 0');
+                        }
+
+                        return $query
+                            ->whereNull('department_id')
+                            ->where('tenant_id', $ownerRecord->tenant_id)
+                            ->whereDoesntHave('roles', fn (Builder $q) => $q->where('name', 'super-admin'));
+                    })
                     ->visible(fn (): bool => $this->canManageMembers()),
             ])
             ->recordActions([

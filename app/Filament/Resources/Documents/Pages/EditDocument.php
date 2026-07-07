@@ -28,10 +28,18 @@ class EditDocument extends EditRecord
         return [
             Action::make('download')
                 ->label('Descargar')
-                ->action(fn () => response()->download(
-                    Storage::disk($this->record->disk ?: Document::STORAGE_DISK)->path($this->record->file_path),
-                    $this->record->original_filename ?: basename($this->record->file_path),
-                )),
+                ->action(function () {
+                    $record = $this->getRecord();
+
+                    if (! $record instanceof Document) {
+                        return null;
+                    }
+
+                    return response()->download(
+                        Storage::disk($record->disk ?: Document::STORAGE_DISK)->path($record->file_path),
+                        $record->original_filename ?: basename($record->file_path),
+                    );
+                }),
             ViewAction::make(),
             DeleteAction::make(),
             ForceDeleteAction::make(),
@@ -41,14 +49,20 @@ class EditDocument extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $this->ensureUserBelongsToTenant($data);
+        $record = $this->getRecord();
 
-        if (($data['file_path'] ?? null) === $this->record->file_path) {
+        if (! $record instanceof Document) {
             return $data;
         }
 
-        $this->previousFileDisk = $this->record->disk;
-        $this->previousFilePath = $this->record->file_path;
+        $this->ensureUserBelongsToTenant($data);
+
+        if (($data['file_path'] ?? null) === $record->file_path) {
+            return $data;
+        }
+
+        $this->previousFileDisk = $record->disk;
+        $this->previousFilePath = $record->file_path;
 
         $data['disk'] = Document::STORAGE_DISK;
         $data['uploaded_by_user_id'] = Auth::id();
@@ -78,6 +92,9 @@ class EditDocument extends EditRecord
         $this->previousFilePath = null;
     }
 
+    /**
+     * @param  array{user_id: int|string, tenant_id: int|string}  $data
+     */
     private function ensureUserBelongsToTenant(array $data): void
     {
         $userBelongsToTenant = User::query()

@@ -229,12 +229,13 @@ class PortalShellTest extends TestCase
             ->assertSee('Acme HR')
             ->assertSee('People Specialist')
             ->assertSee('28 dias totales')
-            ->assertSee('0 consumidos · 28 disponibles')
+            ->assertSee('0 consumidos')
+            ->assertSee('25 disponibles')
             ->assertSee('08:30')
             ->assertSee('Pendiente de salida')
-            ->assertSee('1 solicitud pendiente')
-            ->assertSee('2 solicitudes registradas')
-            ->assertSee('1 documento disponible')
+            ->assertSee('1 pend.')
+            ->assertSee('2 registradas')
+            ->assertSee('1 documento disponible en tu expediente personal.')
             ->assertSee(now()->addDays(10)->format('d/m/Y'));
     }
 

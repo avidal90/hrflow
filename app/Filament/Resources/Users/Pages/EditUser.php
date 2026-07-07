@@ -90,17 +90,34 @@ class EditUser extends EditRecord
             return;
         }
 
-        $this->record->syncRoles([$this->selectedRoleName]);
+        $record = $this->getRecord();
+
+        if (! $record instanceof User) {
+            return;
+        }
+
+        $record->syncRoles([$this->selectedRoleName]);
     }
 
+    /**
+     * @param  array{role_name?: string}  $data
+     */
     private function extractSelectedRoleName(array $data): string
     {
+        $record = $this->getRecord();
+
+        if (! $record instanceof User) {
+            throw ValidationException::withMessages([
+                'role_name' => 'No se pudo resolver el usuario a editar.',
+            ]);
+        }
+
         /** @var User|null $currentUser */
         $currentUser = Auth::user();
-        $roleName = $data['role_name'] ?? $this->record->primaryRoleName() ?? 'employee';
-        $currentRoleName = $this->record->primaryRoleName();
+        $roleName = $data['role_name'] ?? $record->primaryRoleName() ?? 'employee';
+        $currentRoleName = $record->primaryRoleName();
 
-        if (! User::canManageRoleAssignments($currentUser, $this->record)) {
+        if (! User::canManageRoleAssignments($currentUser, $record)) {
             if ($roleName === $currentRoleName) {
                 return (string) $currentRoleName;
             }
@@ -110,7 +127,7 @@ class EditUser extends EditRecord
             ]);
         }
 
-        $availableRoles = User::assignableRoleOptionsFor($currentUser, $this->record);
+        $availableRoles = User::assignableRoleOptionsFor($currentUser, $record);
 
         if (array_key_exists($roleName, $availableRoles)) {
             return $roleName;

@@ -66,7 +66,13 @@ class FestivoResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->visibleTo($user);
+        $model = $query->getModel();
+
+        if (! $model instanceof Festivo) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $model->scopeVisibleTo($query, $user);
     }
 
     public static function getRelations(): array

@@ -66,7 +66,13 @@ class TimeEntryResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->visibleToUser($user);
+        $model = $query->getModel();
+
+        if (! $model instanceof TimeEntry) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $model->scopeVisibleToUser($query, $user);
     }
 
     public static function getRelations(): array

@@ -31,7 +31,9 @@ Route::middleware([
     InitializeTenancyByPath::class,
 ])->prefix('/portal/{tenant}')->group(function () {
     Route::get('/login', [PortalAuthenticatedSessionController::class, 'create'])->name('portal.login');
-    Route::post('/login', [PortalAuthenticatedSessionController::class, 'store'])->name('portal.login.store');
+    Route::post('/login', [PortalAuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:login')
+        ->name('portal.login.store');
 
     Route::middleware(['auth', EnsureUserBelongsToTenant::class])->group(function (): void {
         Route::post('/logout', [PortalAuthenticatedSessionController::class, 'destroy'])->name('portal.logout');

@@ -153,7 +153,40 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'hire_date' => 'date',
             'birth_date' => 'date',
             'annual_vacation_days' => 'integer',
+            'national_id' => 'encrypted',
+            'social_security_number' => 'encrypted',
         ];
+    }
+
+    public function maskedNationalId(): ?string
+    {
+        return $this->maskedSensitiveValue($this->national_id);
+    }
+
+    public function maskedSocialSecurityNumber(): ?string
+    {
+        return $this->maskedSensitiveValue($this->social_security_number);
+    }
+
+    private function maskedSensitiveValue(?string $value): ?string
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        $clean = preg_replace('/\s+/', '', $value);
+
+        if (! is_string($clean)) {
+            return null;
+        }
+
+        $length = mb_strlen($clean);
+
+        if ($length <= 4) {
+            return str_repeat('*', $length);
+        }
+
+        return str_repeat('*', $length - 4).mb_substr($clean, -4);
     }
 
     public function department(): BelongsTo

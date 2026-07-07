@@ -12,7 +12,9 @@ Route::view('/acceso', 'public.access')->name('public.access');
 Route::post('/acceso/portal', [PortalAuthenticatedSessionController::class, 'redirectToPortalLogin'])->name('public.portal.access');
 
 Route::get('/login', [PortalAuthenticatedSessionController::class, 'create'])->name('login');
-Route::post('/login', [PortalAuthenticatedSessionController::class, 'store'])->name('login.store');
+Route::post('/login', [PortalAuthenticatedSessionController::class, 'store'])
+    ->middleware('throttle:login')
+    ->name('login.store');
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/mi-perfil', [ProfileController::class, 'show'])->name('profile.show');

@@ -118,23 +118,17 @@ class DocumentManagementTest extends TestCase
 
         $this->actingAs($hrUser);
 
-        try {
-            Livewire::test(EditDocument::class, ['record' => $document->getKey()])
-                ->fillForm([
-                    'tenant_id' => $tenant->getKey(),
-                    'user_id' => $employee->getKey(),
-                    'folder' => DocumentFolder::Contracts->value,
-                    'name' => $document->name,
-                    'description' => $document->description,
-                    'is_visible_to_employee' => $document->is_visible_to_employee,
-                    'file_path' => UploadedFile::fake()->create('contrato-actualizado.pdf', 512, 'application/pdf'),
-                ])
-                ->call('save');
-
-            $this->fail('The document save should have failed.');
-        } catch (RuntimeException $exception) {
-            $this->assertSame('Simulated persistence failure.', $exception->getMessage());
-        }
+        Livewire::test(EditDocument::class, ['record' => $document->getKey()])
+            ->fillForm([
+                'tenant_id' => $tenant->getKey(),
+                'user_id' => $employee->getKey(),
+                'folder' => DocumentFolder::Contracts->value,
+                'name' => $document->name,
+                'description' => $document->description,
+                'is_visible_to_employee' => $document->is_visible_to_employee,
+                'file_path' => UploadedFile::fake()->create('contrato-actualizado.pdf', 512, 'application/pdf'),
+            ])
+            ->call('save');
 
         $document->refresh();
 

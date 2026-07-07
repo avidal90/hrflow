@@ -153,7 +153,7 @@ class PortalAuthenticatedSessionController extends Controller
     }
 
     /**
-     * @return array{title: string, heading: string, description: string, form_action: string, footer_html: string}
+     * @return array{title: string, heading: string, description: string, form_action: string, footer_prefix: string, footer_link_url: string, footer_link_text: string}
      */
     private function loginViewData(Request $request): array
     {
@@ -165,9 +165,9 @@ class PortalAuthenticatedSessionController extends Controller
                 'heading' => 'Accede al portal de '.$tenantName,
                 'description' => 'Entra para fichar, consultar tu calendario y gestionar solicitudes. Si tu rol tambien tiene permisos internos, veras el acceso a administracion dentro del portal.',
                 'form_action' => route('portal.login.store', $this->tenantRouteParameters()),
-                'footer_html' => __('Si necesitas el backoffice, usa el acceso de administracion desde :link.', [
-                    'link' => '<a href="'.route('login').'" class="font-semibold text-slate-700 hover:text-slate-900">la zona interna</a>',
-                ]),
+                'footer_prefix' => 'Si necesitas el backoffice, usa el acceso de administracion desde',
+                'footer_link_url' => route('login'),
+                'footer_link_text' => 'la zona interna',
             ];
         }
 
@@ -176,9 +176,9 @@ class PortalAuthenticatedSessionController extends Controller
             'heading' => 'Acceso administrativo',
             'description' => 'Este acceso esta reservado al backoffice en Filament para RRHH, responsables y perfiles administrativos.',
             'form_action' => route('login.store'),
-            'footer_html' => __('Si vienes a fichar o a pedir vacaciones, usa :link.', [
-                'link' => '<a href="'.route('public.access').'" class="font-semibold text-slate-700 hover:text-slate-900">el portal de tu empresa</a>',
-            ]),
+            'footer_prefix' => 'Si vienes a fichar o a pedir vacaciones, usa',
+            'footer_link_url' => route('public.access'),
+            'footer_link_text' => 'el portal de tu empresa',
         ];
     }
 

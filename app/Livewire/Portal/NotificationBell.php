@@ -23,7 +23,7 @@ class NotificationBell extends Component
         $user = auth()->user();
 
         if ($user === null) {
-            return new Collection();
+            return new Collection;
         }
 
         return $user->notifications()

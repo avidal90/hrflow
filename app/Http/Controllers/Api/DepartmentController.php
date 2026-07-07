@@ -24,6 +24,8 @@ class DepartmentController extends Controller
             abort(401);
         }
 
+        Gate::authorize('viewAny', Department::class);
+
         $query = Department::query()->with(['tenant', 'manager'])->visibleTo($user);
 
         return response()->json($query->orderBy('name')->get());

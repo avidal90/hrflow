@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\Festivos\FestivoResource;
 use App\Filament\Resources\Festivos\Pages\CreateFestivo;
+use App\Filament\Resources\Festivos\Pages\EditFestivo;
 use App\Models\Festivo;
 use App\Models\Role;
 use App\Models\Tenant;
@@ -36,6 +37,56 @@ class FestivoManagementTest extends TestCase
 
         $this->assertSame((string) $tenant->getKey(), (string) $festivo->tenant_id);
         $this->assertSame('2026-12-25', $festivo->date?->format('Y-m-d'));
+    }
+
+    public function test_company_admin_cannot_create_festivo_in_other_tenant_by_manipulating_livewire_payload(): void
+    {
+        [$tenant, $companyAdmin] = $this->createTenantUsers();
+        $otherTenant = Tenant::factory()->create();
+
+        $this->actingAs($companyAdmin);
+
+        Livewire::test(CreateFestivo::class)
+            ->fillForm([
+                'tenant_id' => $otherTenant->getKey(),
+                'date' => '2026-10-12',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors()
+            ->assertNotified();
+
+        $festivo = Festivo::query()->firstOrFail();
+
+        $this->assertSame((string) $tenant->getKey(), (string) $festivo->tenant_id);
+        $this->assertNotSame((string) $otherTenant->getKey(), (string) $festivo->tenant_id);
+    }
+
+    public function test_company_admin_cannot_move_festivo_to_other_tenant_by_manipulating_livewire_payload(): void
+    {
+        [$tenant, $companyAdmin] = $this->createTenantUsers();
+        $otherTenant = Tenant::factory()->create();
+
+        $festivo = Festivo::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'date' => '2026-05-01',
+        ]);
+
+        $this->actingAs($companyAdmin);
+
+        Livewire::test(EditFestivo::class, ['record' => $festivo->getKey()])
+            ->fillForm([
+                'tenant_id' => $otherTenant->getKey(),
+                'date' => '2026-05-02',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->assertNotified();
+
+        $festivo->refresh();
+
+        $this->assertSame((string) $tenant->getKey(), (string) $festivo->tenant_id);
+        $this->assertSame('2026-05-02', $festivo->date?->format('Y-m-d'));
+        $this->assertNotSame((string) $otherTenant->getKey(), (string) $festivo->tenant_id);
     }
 
     public function test_hr_and_department_manager_can_view_but_cannot_mutate_festivos(): void

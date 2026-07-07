@@ -15,18 +15,23 @@ trait BelongsToTenant
         $modelClass = static::class;
 
         $modelClass::creating(function (Model $model): void {
-            $user = Auth::user();
-
-            if (! $user instanceof User || $user->isSuperAdmin()) {
-                return;
-            }
-
-            if ($user->tenant_id === null || filled($model->tenant_id)) {
-                return;
-            }
-
-            $model->tenant_id = $user->tenant_id;
+            self::normalizeTenantForAuthenticatedUser($model);
         });
+
+        $modelClass::updating(function (Model $model): void {
+            self::normalizeTenantForAuthenticatedUser($model);
+        });
+    }
+
+    private static function normalizeTenantForAuthenticatedUser(Model $model): void
+    {
+        $user = Auth::user();
+
+        if (! $user instanceof User || $user->isSuperAdmin() || $user->tenant_id === null) {
+            return;
+        }
+
+        $model->tenant_id = $user->tenant_id;
     }
 
     public function scopeForCurrentTenant(Builder $query): Builder

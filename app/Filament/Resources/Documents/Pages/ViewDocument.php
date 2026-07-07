@@ -18,10 +18,18 @@ class ViewDocument extends ViewRecord
         return [
             Action::make('download')
                 ->label('Descargar')
-                ->action(fn () => response()->download(
-                    Storage::disk($this->record->disk ?: Document::STORAGE_DISK)->path($this->record->file_path),
-                    $this->record->original_filename ?: basename($this->record->file_path),
-                )),
+                ->action(function () {
+                    $record = $this->getRecord();
+
+                    if (! $record instanceof Document) {
+                        return null;
+                    }
+
+                    return response()->download(
+                        Storage::disk($record->disk ?: Document::STORAGE_DISK)->path($record->file_path),
+                        $record->original_filename ?: basename($record->file_path),
+                    );
+                }),
             EditAction::make(),
         ];
     }

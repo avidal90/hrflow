@@ -54,9 +54,11 @@ class UserInfolist
                             ->placeholder('-'),
                         TextEntry::make('national_id')
                             ->label('DNI / NIF')
+                            ->state(fn (User $record): ?string => $record->maskedNationalId())
                             ->placeholder('-'),
                         TextEntry::make('social_security_number')
                             ->label('Número de Seguridad Social')
+                            ->state(fn (User $record): ?string => $record->maskedSocialSecurityNumber())
                             ->placeholder('-'),
                         TextEntry::make('birth_country')
                             ->label('País de nacimiento')

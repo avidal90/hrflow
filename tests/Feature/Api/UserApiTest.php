@@ -14,6 +14,22 @@ class UserApiTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    public function test_employee_cannot_list_users_in_api_index(): void
+    {
+        $tenant = Tenant::factory()->create();
+
+        $this->seedRoles();
+
+        $employee = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+        $employee->assignRole('employee');
+
+        Sanctum::actingAs($employee);
+
+        $this->getJson('/api/users')->assertForbidden();
+    }
+
     public function test_company_admin_can_create_user_employee_with_valid_department(): void
     {
         $tenant = Tenant::factory()->create();
@@ -292,7 +308,7 @@ class UserApiTest extends TestCase
 
     private function seedRoles(): void
     {
-        foreach (['super-admin', 'company-admin', 'hr', 'department-manager'] as $role) {
+        foreach (['super-admin', 'company-admin', 'hr', 'department-manager', 'employee'] as $role) {
             Role::findOrCreate($role, 'web');
         }
     }

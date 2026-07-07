@@ -23,6 +23,8 @@ class UserController extends Controller
             abort(401);
         }
 
+        Gate::authorize('viewAny', User::class);
+
         $query = User::query()->with(['tenant', 'department'])->whereNotNull('tenant_id')->visibleTo($user);
 
         return response()->json($query->orderBy('name')->get());

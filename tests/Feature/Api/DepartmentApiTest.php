@@ -13,6 +13,22 @@ class DepartmentApiTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    public function test_employee_cannot_list_departments_in_api_index(): void
+    {
+        $tenant = Tenant::factory()->create();
+
+        $this->seedRoles();
+
+        $employee = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+        $employee->assignRole('employee');
+
+        Sanctum::actingAs($employee);
+
+        $this->getJson('/api/departments')->assertForbidden();
+    }
+
     public function test_company_admin_can_create_department_using_form_request_defaults(): void
     {
         $tenant = Tenant::factory()->create();
@@ -92,7 +108,7 @@ class DepartmentApiTest extends TestCase
 
     private function seedRoles(): void
     {
-        foreach (['super-admin', 'company-admin', 'hr', 'department-manager'] as $role) {
+        foreach (['super-admin', 'company-admin', 'hr', 'department-manager', 'employee'] as $role) {
             Role::findOrCreate($role, 'web');
         }
     }

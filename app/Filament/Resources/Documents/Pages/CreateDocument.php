@@ -38,6 +38,9 @@ class CreateDocument extends CreateRecord
         return $data;
     }
 
+    /**
+     * @param  array{user_id: int|string, tenant_id: int|string}  $data
+     */
     private function ensureUserBelongsToTenant(array $data): void
     {
         $userBelongsToTenant = User::query()

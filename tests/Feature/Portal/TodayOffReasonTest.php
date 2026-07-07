@@ -17,6 +17,13 @@ class TodayOffReasonTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+
+        parent::tearDown();
+    }
+
     // -------------------------------------------------------------------------
     // todayOffReason() - ausencia aprobada
     // -------------------------------------------------------------------------
@@ -125,8 +132,6 @@ class TodayOffReasonTest extends TestCase
         ]);
 
         $this->assertSame('weekend', $employee->todayOffReason());
-
-        Carbon::setTestNow();
     }
 
     public function test_does_not_return_weekend_when_turno_includes_weekends(): void
@@ -150,8 +155,6 @@ class TodayOffReasonTest extends TestCase
         ]);
 
         $this->assertNull($employee->todayOffReason());
-
-        Carbon::setTestNow();
     }
 
     // -------------------------------------------------------------------------
