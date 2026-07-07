@@ -36,8 +36,11 @@ class DepartmentUpcomingTurnosWidget extends TableWidget
                     ->with(['user', 'turno'])
                     ->whereIn('user_id', $departmentUserIds)
                     ->where(function ($query): void {
-                        $query->whereNull('valid_until')
-                            ->orWhereDate('valid_until', '>=', today());
+                        $query->whereDate('valid_from', '<=', today())
+                            ->where(function ($query): void {
+                                $query->whereNull('valid_until')
+                                    ->orWhereDate('valid_until', '>=', today());
+                            });
                     })
                     ->orderBy('valid_from')
                     ->limit(10)
