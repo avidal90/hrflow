@@ -58,6 +58,7 @@ class LeaveRequests extends Component
     public function remainingVacationDays(): int
     {
         $user = auth()->user();
+        abort_unless($user instanceof User, 403);
 
         abort_unless($user instanceof User, 403);
 
@@ -125,6 +126,7 @@ class LeaveRequests extends Component
     public function render(): View
     {
         $user = auth()->user();
+        abort_unless($user instanceof User, 403);
 
         $leaveRequests = LeaveRequest::where('user_id', $user->id)
             ->where('tenant_id', $user->tenant_id)

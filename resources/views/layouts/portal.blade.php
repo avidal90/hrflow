@@ -73,7 +73,7 @@
                         <p class="mt-0.5 text-xs leading-none text-slate-500">{{ $activePortalUser?->primaryRoleLabel() }}</p>
                     </div>
 
-                    <form method="POST" action="{{ route('logout', $tenantRouteParameters) }}">
+                    <form method="POST" action="{{ route('portal.logout', $tenantRouteParameters) }}">
                         @csrf
                         <button type="submit" class="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900">
                             Salir

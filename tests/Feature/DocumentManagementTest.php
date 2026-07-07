@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\DocumentFolder;
 use App\Filament\Resources\Documents\DocumentResource;
 use App\Filament\Resources\Documents\Pages\CreateDocument;
+use App\Filament\Resources\Documents\Pages\EditDocument;
 use App\Models\Document;
 use App\Models\Role;
 use App\Models\Tenant;
@@ -14,6 +15,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use RuntimeException;
 use Tests\TestCase;
 
 class DocumentManagementTest extends TestCase
@@ -78,6 +80,66 @@ class DocumentManagementTest extends TestCase
             ->assertHasFormErrors(['file_path']);
 
         $this->assertDatabaseCount('documents', 0);
+    }
+
+    public function test_edit_document_keeps_previous_file_when_save_fails(): void
+    {
+        Storage::fake(Document::STORAGE_DISK);
+
+        [$tenant, $hrUser, $employee] = $this->createTenantWithHrAndEmployee();
+
+        $previousPath = 'tenant/'.$tenant->getKey().'/'.DocumentFolder::Contracts->value.'/user/'.$employee->getKey().'/contrato-anterior.pdf';
+        Storage::disk(Document::STORAGE_DISK)->put($previousPath, 'previous-contract');
+
+        $document = Document::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'uploaded_by_user_id' => $hrUser->getKey(),
+            'folder' => DocumentFolder::Contracts,
+            'disk' => Document::STORAGE_DISK,
+            'file_path' => $previousPath,
+            'original_filename' => 'contrato-anterior.pdf',
+            'mime_type' => 'application/pdf',
+            'file_size' => Storage::disk(Document::STORAGE_DISK)->size($previousPath),
+            'uploaded_at' => now(),
+        ]);
+
+        $shouldFailNextUpdate = true;
+
+        Document::updating(static function () use (&$shouldFailNextUpdate): void {
+            if (! $shouldFailNextUpdate) {
+                return;
+            }
+
+            $shouldFailNextUpdate = false;
+
+            throw new RuntimeException('Simulated persistence failure.');
+        });
+
+        $this->actingAs($hrUser);
+
+        try {
+            Livewire::test(EditDocument::class, ['record' => $document->getKey()])
+                ->fillForm([
+                    'tenant_id' => $tenant->getKey(),
+                    'user_id' => $employee->getKey(),
+                    'folder' => DocumentFolder::Contracts->value,
+                    'name' => $document->name,
+                    'description' => $document->description,
+                    'is_visible_to_employee' => $document->is_visible_to_employee,
+                    'file_path' => UploadedFile::fake()->create('contrato-actualizado.pdf', 512, 'application/pdf'),
+                ])
+                ->call('save');
+
+            $this->fail('The document save should have failed.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Simulated persistence failure.', $exception->getMessage());
+        }
+
+        $document->refresh();
+
+        $this->assertSame($previousPath, $document->file_path);
+        $this->assertTrue(Storage::disk(Document::STORAGE_DISK)->exists($previousPath));
     }
 
     public function test_employee_and_department_manager_cannot_create_documents(): void

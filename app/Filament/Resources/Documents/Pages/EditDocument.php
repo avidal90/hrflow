@@ -19,6 +19,10 @@ class EditDocument extends EditRecord
 {
     protected static string $resource = DocumentResource::class;
 
+    protected ?string $previousFileDisk = null;
+
+    protected ?string $previousFilePath = null;
+
     protected function getHeaderActions(): array
     {
         return [
@@ -43,7 +47,8 @@ class EditDocument extends EditRecord
             return $data;
         }
 
-        $previousPath = $this->record->file_path;
+        $this->previousFileDisk = $this->record->disk;
+        $this->previousFilePath = $this->record->file_path;
 
         $data['disk'] = Document::STORAGE_DISK;
         $data['uploaded_by_user_id'] = Auth::id();
@@ -58,13 +63,19 @@ class EditDocument extends EditRecord
 
         $storage = Storage::disk(Document::STORAGE_DISK);
 
-        $data['mime_type'] = mime_content_type($storage->path($data['file_path'])) ?: 'application/octet-stream';
+        $data['mime_type'] = $storage->mimeType($data['file_path']) ?: 'application/octet-stream';
         $data['file_size'] = $storage->size($data['file_path']);
         $data['uploaded_at'] = now();
 
-        Document::deleteStoredFile($this->record->disk, $previousPath);
-
         return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        Document::deleteStoredFile($this->previousFileDisk, $this->previousFilePath);
+
+        $this->previousFileDisk = null;
+        $this->previousFilePath = null;
     }
 
     private function ensureUserBelongsToTenant(array $data): void

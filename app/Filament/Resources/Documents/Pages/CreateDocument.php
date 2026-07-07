@@ -31,7 +31,7 @@ class CreateDocument extends CreateRecord
 
         $storage = Storage::disk(Document::STORAGE_DISK);
 
-        $data['mime_type'] = mime_content_type($storage->path($data['file_path'])) ?: 'application/octet-stream';
+        $data['mime_type'] = $storage->mimeType($data['file_path']) ?: 'application/octet-stream';
         $data['file_size'] = $storage->size($data['file_path']);
         $data['uploaded_at'] = now();
 
