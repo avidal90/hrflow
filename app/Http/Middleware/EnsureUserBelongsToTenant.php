@@ -19,6 +19,8 @@ class EnsureUserBelongsToTenant
 
         $currentTenantId = (string) (tenant()?->getTenantKey() ?? '');
 
+        abort_unless($user->tenant_id !== null, 403);
+
         if ((string) $user->tenant_id !== $currentTenantId) {
             return redirect()->route('portal.dashboard', ['tenant' => $user->tenant_id]);
         }
