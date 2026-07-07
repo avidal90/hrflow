@@ -28,7 +28,11 @@ class LeaveRequestResource extends Resource
 
     protected static ?string $pluralModelLabel = 'solicitudes';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Control de tiempo';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $navigationLabel = 'Solicitudes';
 

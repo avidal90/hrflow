@@ -25,6 +25,7 @@ class TurnoFactory extends Factory
             'end_time' => '17:00:00',
             'break_minutes' => 60,
             'total_hours' => 8.00,
+            'includes_weekends' => true,
         ];
     }
 }

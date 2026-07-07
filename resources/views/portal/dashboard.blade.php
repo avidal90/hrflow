@@ -60,7 +60,8 @@
                 </div>
                 <div class="rounded-xl bg-white/8 p-3">
                     <p class="text-xs font-medium text-slate-400">Vacaciones</p>
-                    <p class="mt-1.5 text-sm font-semibold text-white">{{ $portalUser->annual_vacation_days }} dias</p>
+                    <p class="mt-1.5 text-sm font-semibold text-white">{{ $portalUser->annual_vacation_days }} dias totales</p>
+                    <p class="mt-1 text-xs text-slate-300">{{ $usedVacationDays }} consumidos · {{ $remainingVacationDays }} disponibles</p>
                 </div>
             </div>
         </article>
@@ -68,21 +69,38 @@
         <article class="flex min-w-0 flex-col justify-between rounded-2xl bg-white p-6 ring-1 ring-slate-200 shadow-sm lg:min-w-64">
             <div>
                 <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Hoy</p>
-                <p class="mt-3 text-4xl font-semibold tabular-nums text-slate-900">
-                    {{ $todayTimeEntry?->check_in_time ? substr((string) $todayTimeEntry->check_in_time, 0, 5) : '--:--' }}
-                </p>
-                <p class="mt-1 text-sm text-slate-500">
-                    @if ($todayTimeEntry && $todayTimeEntry->status?->value === 'incomplete')
-                        Entrada registrada
-                    @elseif ($todayTimeEntry)
-                        Jornada completa
-                    @else
-                        Sin fichaje
-                    @endif
-                </p>
+                @if ($todayOffReason && ! $todayTimeEntry)
+                    <p class="mt-3 text-base font-semibold text-slate-900">Día libre</p>
+                    <p class="mt-1 text-sm text-slate-500">
+                        @if ($todayOffReason === 'leave')
+                            Ausencia aprobada
+                        @elseif ($todayOffReason === 'festivo')
+                            Festivo
+                        @elseif ($todayOffReason === 'weekend')
+                            Fin de semana
+                        @endif
+                    </p>
+                @else
+                    <p class="mt-3 text-4xl font-semibold tabular-nums text-slate-900">
+                        {{ $todayTimeEntry?->check_in_time ? substr((string) $todayTimeEntry->check_in_time, 0, 5) : '--:--' }}
+                    </p>
+                    <p class="mt-1 text-sm text-slate-500">
+                        @if ($todayTimeEntry && $todayTimeEntry->status?->value === 'incomplete')
+                            Entrada registrada
+                        @elseif ($todayTimeEntry)
+                            Jornada completa
+                        @else
+                            Sin fichaje
+                        @endif
+                    </p>
+                @endif
             </div>
             <div class="mt-4">
-                @if ($todayTimeEntry && $todayTimeEntry->status?->value === 'incomplete')
+                @if ($todayOffReason && ! $todayTimeEntry)
+                    <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                        ¡Disfruta del día!
+                    </span>
+                @elseif ($todayTimeEntry && $todayTimeEntry->status?->value === 'incomplete')
                     <span class="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
                         Pendiente de salida
                     </span>
@@ -122,7 +140,7 @@
                 @endif
             </div>
             <p class="mt-3 text-3xl font-semibold tabular-nums text-slate-900">
-                {{ $nextApprovedLeaveRequest?->start_date?->format('d/m') ?? '-' }}
+                {{ $calendarDateLabel }}
             </p>
             <p class="mt-1 text-xs text-slate-500">{{ $calendarDescription }}</p>
         </article>

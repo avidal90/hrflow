@@ -2,6 +2,7 @@
     {{-- Tarjeta de fichaje activo --}}
     @if ($activeEntry)
         <div
+            wire:key="tracker-active"
             x-data="{
                 startTs: {{ $checkInTimestamp }},
                 elapsed: 0,
@@ -47,7 +48,35 @@
             </div>
         </div>
     @else
-        <div class="mb-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+        @if ($todayOffReason)
+            <div wire:key="tracker-offday" class="mb-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+                <div class="flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-slate-900">Hoy no tienes que fichar. ¡Disfruta del día!</p>
+                            <p class="mt-0.5 text-sm text-slate-500">
+                                @if ($todayOffReason === 'leave')
+                                    Tienes una ausencia aprobada que cubre el día de hoy.
+                                @elseif ($todayOffReason === 'festivo')
+                                    Hoy es festivo en tu empresa.
+                                @elseif ($todayOffReason === 'weekend')
+                                    Tu turno asignado no incluye el fin de semana.
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+                    <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                        Día libre
+                    </span>
+                </div>
+            </div>
+        @else
+        <div wire:key="tracker-inactive" class="mb-6 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
             <div class="flex flex-col items-start justify-between gap-6 p-6 sm:flex-row sm:items-center">
                 <div>
                     <div class="flex items-center gap-2">
@@ -69,6 +98,34 @@
                     <span wire:loading.remove wire:target="startTracking">Iniciar jornada</span>
                     <span wire:loading wire:target="startTracking">Iniciando...</span>
                 </button>
+            </div>
+        </div>
+        @endif
+    @endif
+
+    @if ($todayShiftSummary)
+        <div class="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Turno de hoy</p>
+                    <h2 class="mt-2 text-lg font-semibold text-slate-900">{{ $todayShiftSummary['name'] }}</h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        {{ $todayShiftSummary['start'] }} - {{ $todayShiftSummary['end'] }}
+                        <span class="text-slate-300">·</span>
+                        {{ $todayShiftSummary['totalLabel'] }} previstas
+                    </p>
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-2 lg:min-w-[22rem]">
+                    <div class="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200/80">
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Cumplidas</p>
+                        <p class="mt-1 text-lg font-semibold tabular-nums text-slate-900">{{ $todayShiftSummary['workedLabel'] }}</p>
+                    </div>
+                    <div class="rounded-xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200/80">
+                        <p class="text-xs font-medium uppercase tracking-wide text-amber-700">Pendientes</p>
+                        <p class="mt-1 text-lg font-semibold tabular-nums text-amber-900">{{ $todayShiftSummary['remainingLabel'] }}</p>
+                    </div>
+                </div>
             </div>
         </div>
     @endif

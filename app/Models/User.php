@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\LeaveRequestStatus;
+use App\Enums\LeaveRequestType;
 use App\Models\Concerns\BelongsToTenant;
 use App\Policies\UserPolicy;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
@@ -18,11 +21,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['tenant_id', 'department_id', 'name', 'email', 'password', 'employee_code', 'hire_date', 'employment_status', 'annual_vacation_days', 'job_title', 'avatar_path'])]
+#[Fillable(['tenant_id', 'department_id', 'name', 'email', 'password', 'employee_code', 'hire_date', 'employment_status', 'annual_vacation_days', 'job_title', 'avatar_path', 'phone_personal', 'phone_company', 'birth_date', 'national_id', 'social_security_number', 'birth_country', 'address'])]
 #[Hidden(['password', 'remember_token'])]
 #[UsePolicy(UserPolicy::class)]
 class User extends Authenticatable implements FilamentUser, HasAvatar
@@ -147,6 +151,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'hire_date' => 'date',
+            'birth_date' => 'date',
             'annual_vacation_days' => 'integer',
         ];
     }
@@ -186,6 +191,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(TurnoAssignment::class);
     }
 
+    public function isAccountActive(): bool
+    {
+        return in_array($this->employment_status, ['active', 'on_leave'], true);
+    }
+
     public function isCompanyAdmin(): bool
     {
         return $this->hasRole('company-admin');
@@ -216,6 +226,82 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return self::roleLabel($this->primaryRoleName());
     }
 
+    public function approvedVacationDaysBooked(): int
+    {
+        return (int) $this->leaveRequests()
+            ->where('tenant_id', $this->tenant_id)
+            ->where('request_type', LeaveRequestType::Vacation->value)
+            ->where('status', LeaveRequestStatus::Approved->value)
+            ->get()
+            ->sum(fn (LeaveRequest $leaveRequest): int => (int) $leaveRequest->start_date->diffInDays($leaveRequest->end_date) + 1);
+    }
+
+    public function approvedVacationDaysConsumedToDate(): int
+    {
+        $today = today();
+
+        return (int) $this->leaveRequests()
+            ->where('tenant_id', $this->tenant_id)
+            ->where('request_type', LeaveRequestType::Vacation->value)
+            ->where('status', LeaveRequestStatus::Approved->value)
+            ->whereDate('start_date', '<=', $today)
+            ->get()
+            ->sum(function (LeaveRequest $leaveRequest) use ($today): int {
+                $consumedUntil = $leaveRequest->end_date->lt($today)
+                    ? $leaveRequest->end_date
+                    : $today;
+
+                return (int) $leaveRequest->start_date->diffInDays($consumedUntil) + 1;
+            });
+    }
+
+    public function remainingVacationDays(): int
+    {
+        return max(0, (int) $this->annual_vacation_days - $this->approvedVacationDaysBooked());
+    }
+
+    /**
+     * Returns why the user does not need to clock in today, or null if they should.
+     * Possible values: 'leave', 'festivo', 'weekend'
+     */
+    public function todayOffReason(): ?string
+    {
+        $today = CarbonImmutable::today();
+
+        if ($this->leaveRequests()
+            ->where('status', LeaveRequestStatus::Approved)
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->exists()) {
+            return 'leave';
+        }
+
+        if ($this->tenant_id !== null && Festivo::query()
+            ->where('tenant_id', $this->tenant_id)
+            ->whereDate('date', $today)
+            ->exists()) {
+            return 'festivo';
+        }
+
+        if ($today->isWeekend() && $this->tenant_id !== null) {
+            $assignment = TurnoAssignment::query()
+                ->where('user_id', $this->getKey())
+                ->where('tenant_id', $this->tenant_id)
+                ->with('turno')
+                ->activeOn($today)
+                ->latest('id')
+                ->first();
+
+            if ($assignment instanceof TurnoAssignment
+                && $assignment->turno instanceof Turno
+                && ! $assignment->turno->includes_weekends) {
+                return 'weekend';
+            }
+        }
+
+        return null;
+    }
+
     public function canAccessAdministration(): bool
     {
         if ($this->isSuperAdmin()) {
@@ -223,6 +309,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         return $this->tenant_id !== null
+            && $this->isAccountActive()
             && $this->hasAnyRole(['company-admin', 'hr', 'department-manager']);
     }
 
@@ -237,9 +324,12 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return null;
         }
 
-        $publicDiskUrl = (string) config('filesystems.disks.public.url', '');
-
-        return rtrim($publicDiskUrl, '/').'/'.ltrim((string) $this->avatar_path, '/');
+        try {
+            return Storage::disk('avatars')
+                ->temporaryUrl((string) $this->avatar_path, now()->addHour());
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function managesDepartment(Department $department): bool

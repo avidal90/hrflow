@@ -219,7 +219,7 @@ class UserProfileAndSecurityTest extends TestCase
 
     public function test_employee_can_manage_avatar_and_password_from_their_profile_page(): void
     {
-        Storage::fake('public');
+        Storage::fake('avatars');
 
         $tenant = Tenant::factory()->create();
 
@@ -244,7 +244,7 @@ class UserProfileAndSecurityTest extends TestCase
         $employee->refresh();
 
         $this->assertNotNull($employee->avatar_path);
-        $this->assertTrue(Storage::disk('public')->exists($employee->avatar_path));
+        $this->assertTrue(Storage::disk('avatars')->exists($employee->avatar_path));
 
         $this->put(route('profile.password.update'), [
             'current_password' => 'password',

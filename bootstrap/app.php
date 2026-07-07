@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedByPathException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -25,4 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->render(function (TenantCouldNotBeIdentifiedByPathException $e, Request $request) {
+            return response()->view('errors.tenant-not-found', [], 404);
+        });
     })->create();

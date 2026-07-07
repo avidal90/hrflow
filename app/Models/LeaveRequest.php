@@ -7,6 +7,8 @@ use App\Enums\LeaveRequestType;
 use App\Models\Concerns\BelongsToTenant;
 use App\Policies\LeaveRequestPolicy;
 use Database\Factories\LeaveRequestFactory;
+use Filament\Actions\Action as FilamentAction;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,6 +34,46 @@ class LeaveRequest extends Model
 {
     /** @use HasFactory<LeaveRequestFactory> */
     use BelongsToTenant, HasFactory, SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::updated(function (self $leaveRequest): void {
+            if (! $leaveRequest->wasChanged('status')) {
+                return;
+            }
+
+            $newStatus = $leaveRequest->status;
+
+            if ($newStatus === LeaveRequestStatus::Pending) {
+                return;
+            }
+
+            $employee = $leaveRequest->user;
+
+            if (! $employee instanceof User) {
+                return;
+            }
+
+            $isApproved = $newStatus === LeaveRequestStatus::Approved;
+            $statusLabel = $newStatus->label();
+            $typeLabel = $leaveRequest->request_type->label();
+            $notificationTitle = $isApproved ? 'Solicitud aprobada' : 'Solicitud rechazada';
+            $portalUrl = route('portal.requests.index', ['tenant' => $leaveRequest->tenant_id]);
+
+            $notification = Notification::make()
+                ->title($notificationTitle)
+                ->body("Tu solicitud de {$typeLabel} ha sido {$statusLabel}.")
+                ->actions([
+                    FilamentAction::make('view')
+                        ->label('Ver solicitudes')
+                        ->url($portalUrl),
+                ]);
+
+            $isApproved ? $notification->success() : $notification->danger();
+
+            $notification->sendToDatabase($employee);
+        });
+    }
 
     protected function casts(): array
     {

@@ -11,39 +11,89 @@
     color: #1e293b;
 }
 
+/* Topbar: blanco, igual que el portal del empleado */
 .fi-topbar {
-    background-color: #2563eb;
+    background-color: #ffffff;
     box-shadow: none;
-    color: #ffffff;
-    ring-color: transparent;
+    border-bottom: 1px solid #e2e8f0;
+    color: #0F172B;
 }
 
 .fi-topbar .fi-icon,
 .fi-topbar .fi-topbar-item-label,
 .fi-topbar .fi-breadcrumbs-item-label,
 .fi-topbar .fi-user-menu-trigger,
-.fi-topbar .fi-icon-btn {
-    color: #ffffff;
-}
-
-.fi-topbar .fi-topbar-item-btn,
-.fi-topbar .fi-icon-btn {
-    color: #ffffff;
+.fi-topbar .fi-icon-btn,
+.fi-topbar .fi-topbar-item-btn {
+    color: #475569;
 }
 
 .fi-topbar .fi-topbar-item-btn:hover,
 .fi-topbar .fi-topbar-item-btn:focus-visible,
 .fi-topbar .fi-icon-btn:hover,
 .fi-topbar .fi-icon-btn:focus-visible {
-    background-color: rgb(255 255 255 / 12%);
+    background-color: #f1f5f9;
+    color: #0F172B;
 }
 
 .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-btn {
-    background-color: rgb(255 255 255 / 18%);
+    background-color: #f1f5f9;
 }
 
 .fi-topbar .fi-topbar-item.fi-active .fi-topbar-item-label,
 .fi-topbar .fi-topbar-item.fi-active .fi-icon,
 .fi-topbar .fi-icon-btn .fi-icon {
-    color: #ffffff;
+    color: #0F172B;
+}
+
+/* Sidebar */
+.fi-sidebar,
+.fi-sidebar-nav {
+    background-color: #1F2937 !important;
+}
+
+.fi-sidebar .fi-sidebar-item-label {
+    color: #E5E7EB;
+}
+
+.fi-sidebar .fi-icon {
+    color: #9CA3AF;
+}
+
+.fi-sidebar .fi-nav-group-label {
+    color: #6B7280;
+    font-weight: 600;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* Ítem activo */
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-btn {
+    background-color: #374151;
+    border-radius: 8px;
+    border-left: 2px solid #F59E0B;
+}
+
+.fi-sidebar .fi-sidebar-item.fi-active .fi-sidebar-item-label {
+    color: #F9FAFB;
+    font-weight: 600;
+}
+
+.fi-sidebar .fi-sidebar-item.fi-active .fi-icon {
+    color: #F59E0B;
+}
+
+/* Hover ítem */
+.fi-sidebar .fi-sidebar-item-btn:hover {
+    background-color: #374151;
+    border-radius: 8px;
+}
+
+.fi-sidebar .fi-sidebar-item-btn:hover .fi-sidebar-item-label {
+    color: #F9FAFB;
+}
+
+.fi-sidebar .fi-sidebar-item-btn:hover .fi-icon {
+    color: #D1D5DB;
 }

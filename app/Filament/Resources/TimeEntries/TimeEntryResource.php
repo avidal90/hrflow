@@ -27,7 +27,11 @@ class TimeEntryResource extends Resource
 
     protected static ?string $pluralModelLabel = 'fichajes';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClock;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Control de tiempo';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $navigationLabel = 'Fichajes';
 

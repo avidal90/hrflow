@@ -27,13 +27,9 @@ class TenantManagementTest extends TestCase
         ]);
         $companyAdmin->assignRole('company-admin');
 
-        $this->actingAs($companyAdmin);
-
-        Livewire::test(EditTenant::class, ['record' => $tenant->getKey()])
-            ->set('data.employee_license_limit', 50)
-            ->call('save')
-            ->assertHasNoFormErrors()
-            ->assertNotified();
+        $this->actingAs($companyAdmin)
+            ->get('/admin/tenants/'.$tenant->getKey().'/edit')
+            ->assertForbidden();
 
         $this->assertSame(10, $tenant->refresh()->employee_license_limit);
     }

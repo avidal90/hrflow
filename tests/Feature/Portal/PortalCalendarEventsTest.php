@@ -141,6 +141,41 @@ class PortalCalendarEventsTest extends TestCase
         $this->assertArrayNotHasKey('display', $event);
     }
 
+    public function test_turno_assignments_without_weekends_are_returned_as_weekday_recurring_events(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $employee = $this->createEmployee($tenant);
+
+        $turno = Turno::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'name' => 'Turno Oficina',
+            'start_time' => '09:00:00',
+            'end_time' => '18:00:00',
+            'includes_weekends' => false,
+        ]);
+
+        TurnoAssignment::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'turno_id' => $turno->getKey(),
+            'valid_from' => '2026-07-01',
+            'valid_until' => '2026-07-31',
+        ]);
+
+        $response = $this->actingAs($employee)
+            ->getJson($this->eventsRoute($tenant, '2026-07-01', '2026-07-31'));
+
+        $response->assertOk()->assertJsonCount(1);
+        $event = $response->json(0);
+
+        $this->assertStringContainsString('Turno Oficina', $event['title']);
+        $this->assertSame('2026-07-01', $event['startRecur']);
+        $this->assertSame('2026-08-01', $event['endRecur']);
+        $this->assertSame([1, 2, 3, 4, 5], $event['daysOfWeek']);
+        $this->assertArrayNotHasKey('start', $event);
+        $this->assertArrayNotHasKey('end', $event);
+    }
+
     public function test_employee_cannot_see_other_employees_leave_requests(): void
     {
         $tenant = Tenant::factory()->create();

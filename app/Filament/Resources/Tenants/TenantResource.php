@@ -27,7 +27,9 @@ class TenantResource extends Resource
 
     protected static ?string $pluralModelLabel = 'empresas';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Administración';
 
     protected static ?string $navigationLabel = 'Empresas';
 

@@ -157,6 +157,54 @@ class PortalLeaveRequestsTest extends TestCase
         $this->assertCount(1, $manager->notifications);
     }
 
+    public function test_employee_is_notified_when_their_request_is_approved(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $employee = $this->createEmployee($tenant);
+
+        $leaveRequest = LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'request_type' => LeaveRequestType::Vacation->value,
+            'status' => LeaveRequestStatus::Pending->value,
+        ]);
+
+        $leaveRequest->update([
+            'status' => LeaveRequestStatus::Approved->value,
+        ]);
+
+        $notification = $employee->notifications()->latest()->first();
+
+        $this->assertNotNull($notification);
+        $this->assertSame('Solicitud aprobada', $notification->data['title']);
+        $this->assertStringContainsString('ha sido Aprobada', $notification->data['body']);
+        $this->assertStringContainsString('/portal/'.$tenant->getKey().'/solicitudes', $notification->data['actions'][0]['url']);
+    }
+
+    public function test_employee_is_notified_when_their_request_is_rejected(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $employee = $this->createEmployee($tenant);
+
+        $leaveRequest = LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'request_type' => LeaveRequestType::PaidLeave->value,
+            'status' => LeaveRequestStatus::Pending->value,
+        ]);
+
+        $leaveRequest->update([
+            'status' => LeaveRequestStatus::Rejected->value,
+        ]);
+
+        $notification = $employee->notifications()->latest()->first();
+
+        $this->assertNotNull($notification);
+        $this->assertSame('Solicitud rechazada', $notification->data['title']);
+        $this->assertStringContainsString('ha sido Rechazada', $notification->data['body']);
+        $this->assertStringContainsString('/portal/'.$tenant->getKey().'/solicitudes', $notification->data['actions'][0]['url']);
+    }
+
     public function test_no_notification_when_employee_has_no_manager(): void
     {
         $tenant = Tenant::factory()->create();

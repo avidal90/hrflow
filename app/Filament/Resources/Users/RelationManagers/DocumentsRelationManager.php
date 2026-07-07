@@ -63,13 +63,17 @@ class DocumentsRelationManager extends RelationManager
                     ->preserveFilenames()
                     ->visibility('private')
                     ->acceptedFileTypes([
+                        'image/jpeg',
+                        'image/png',
+                        'image/gif',
+                        'image/webp',
                         'application/pdf',
-                        'application/msword',
                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                        'application/vnd.oasis.opendocument.text',
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
                     ])
                     ->maxSize(20480)
-                    ->helperText('Maximo 20 MB por documento.')
+                    ->helperText('Formatos permitidos: imágenes, PDF, DOCX, XLSX, PPTX. Máximo 20 MB.')
                     ->required()
                     ->columnSpanFull(),
                 Toggle::make('is_visible_to_employee')

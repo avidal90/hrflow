@@ -58,6 +58,8 @@
                         </a>
                     @endif
 
+                    <livewire:portal.notification-bell />
+
                     @if ($activePortalUser?->getFilamentAvatarUrl())
                         <img src="{{ $activePortalUser->getFilamentAvatarUrl() }}" alt="{{ $activePortalUser?->name }}" class="h-8 w-8 rounded-full object-cover ring-2 ring-slate-200">
                     @else

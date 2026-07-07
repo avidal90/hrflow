@@ -228,12 +228,200 @@ class PortalShellTest extends TestCase
             ->assertSee('Ana Portal')
             ->assertSee('Acme HR')
             ->assertSee('People Specialist')
+            ->assertSee('28 dias totales')
+            ->assertSee('0 consumidos · 28 disponibles')
             ->assertSee('08:30')
             ->assertSee('Pendiente de salida')
             ->assertSee('1 solicitud pendiente')
             ->assertSee('2 solicitudes registradas')
             ->assertSee('1 documento disponible')
             ->assertSee(now()->addDays(10)->format('d/m/Y'));
+    }
+
+    public function test_dashboard_vacation_summary_only_counts_approved_vacation_days(): void
+    {
+        $tenant = Tenant::factory()->create();
+
+        $this->createRoles();
+
+        $employee = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'annual_vacation_days' => 23,
+        ]);
+        $employee->assignRole('employee');
+
+        LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'request_type' => 'vacation',
+            'status' => LeaveRequestStatus::Approved->value,
+            'start_date' => '2026-07-02',
+            'end_date' => '2026-07-03',
+        ]);
+
+        LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'request_type' => 'paid_leave',
+            'status' => LeaveRequestStatus::Approved->value,
+            'start_date' => '2026-07-05',
+            'end_date' => '2026-07-05',
+        ]);
+
+        LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'request_type' => 'vacation',
+            'status' => LeaveRequestStatus::Pending->value,
+            'start_date' => '2026-07-10',
+            'end_date' => '2026-07-12',
+        ]);
+
+        $this->actingAs($employee)
+            ->get($this->portalRoute($tenant, '/dashboard'))
+            ->assertOk()
+            ->assertSee('23 dias totales')
+            ->assertSee('2 consumidos · 21 disponibles');
+    }
+
+    public function test_dashboard_shows_the_most_recent_approved_leave_when_no_upcoming_leave_exists(): void
+    {
+        $tenant = Tenant::factory()->create();
+
+        $this->createRoles();
+
+        $employee = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+        $employee->assignRole('employee');
+
+        LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'status' => LeaveRequestStatus::Approved->value,
+            'start_date' => now()->subDays(4)->toDateString(),
+            'end_date' => now()->subDays(3)->toDateString(),
+        ]);
+
+        $this->actingAs($employee)
+            ->get($this->portalRoute($tenant, '/dashboard'))
+            ->assertOk()
+            ->assertSee(now()->subDays(3)->format('d/m'))
+            ->assertSee('Tu ausencia aprobada mas cercana fue del '.now()->subDays(4)->format('d/m/Y').' al '.now()->subDays(3)->format('d/m/Y').'.');
+    }
+
+    public function test_dashboard_prioritizes_an_ongoing_approved_leave_over_other_approved_requests(): void
+    {
+        $tenant = Tenant::factory()->create();
+
+        $this->createRoles();
+
+        $employee = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+        ]);
+        $employee->assignRole('employee');
+
+        LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'status' => LeaveRequestStatus::Approved->value,
+            'start_date' => now()->subDay()->toDateString(),
+            'end_date' => now()->addDay()->toDateString(),
+        ]);
+
+        LeaveRequest::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->getKey(),
+            'status' => LeaveRequestStatus::Approved->value,
+            'start_date' => now()->addDays(10)->toDateString(),
+            'end_date' => now()->addDays(12)->toDateString(),
+        ]);
+
+        $this->actingAs($employee)
+            ->get($this->portalRoute($tenant, '/dashboard'))
+            ->assertOk()
+            ->assertSee(now()->addDay()->format('d/m'))
+            ->assertSee('Tu ausencia aprobada actual termina el '.now()->addDay()->format('d/m/Y').'.')
+            ->assertDontSee(now()->addDays(10)->format('d/m/Y'));
+    }
+
+    public function test_inactive_employee_cannot_log_in(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $this->createRoles();
+
+        $employee = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'employment_status' => 'inactive',
+        ]);
+        $employee->assignRole('employee');
+
+        $this->from($this->portalRoute($tenant, '/login'))
+            ->post($this->portalRoute($tenant, '/login'), [
+                'email' => $employee->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect($this->portalRoute($tenant, '/login'))
+            ->assertSessionHasErrors([
+                'email' => 'Tu cuenta esta desactivada. Contacta con tu responsable de RR.HH.',
+            ]);
+
+        $this->assertGuest();
+    }
+
+    public function test_terminated_employee_cannot_log_in(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $this->createRoles();
+
+        $employee = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'employment_status' => 'terminated',
+        ]);
+        $employee->assignRole('employee');
+
+        $this->from($this->portalRoute($tenant, '/login'))
+            ->post($this->portalRoute($tenant, '/login'), [
+                'email' => $employee->email,
+                'password' => 'password',
+            ])
+            ->assertRedirect($this->portalRoute($tenant, '/login'))
+            ->assertSessionHasErrors([
+                'email' => 'Tu cuenta esta desactivada. Contacta con tu responsable de RR.HH.',
+            ]);
+
+        $this->assertGuest();
+    }
+
+    public function test_inactive_admin_cannot_access_the_admin_panel(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $this->createRoles();
+
+        $admin = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'employment_status' => 'inactive',
+        ]);
+        $admin->assignRole('company-admin');
+
+        $this->assertFalse($admin->canAccessAdministration());
+    }
+
+    public function test_on_leave_employee_can_still_log_in(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $this->createRoles();
+
+        $employee = User::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'employment_status' => 'on_leave',
+        ]);
+        $employee->assignRole('employee');
+
+        $this->post($this->portalRoute($tenant, '/login'), [
+            'email' => $employee->email,
+            'password' => 'password',
+        ])->assertRedirect($this->portalRoute($tenant, '/dashboard'));
     }
 
     private function portalRoute(Tenant $tenant, string $suffix): string

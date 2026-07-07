@@ -27,7 +27,11 @@ class FestivoResource extends Resource
 
     protected static ?string $pluralModelLabel = 'festivos';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Turnos y festivos';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $navigationLabel = 'Festivos';
 
