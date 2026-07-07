@@ -36,7 +36,12 @@ class Documents extends Component
     {
         $user = auth()->user();
 
-        return Document::where('user_id', $user->id)
+        if (! $user instanceof User) {
+            return collect();
+        }
+
+        return Document::query()
+            ->where('user_id', $user->id)
             ->where('tenant_id', $user->tenant_id)
             ->where('is_visible_to_employee', true)
             ->selectRaw('folder, count(*) as total')
