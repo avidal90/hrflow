@@ -18,10 +18,10 @@ class PortalDocumentDownloadController extends Controller
         abort_unless($user instanceof User, 403);
         abort_unless($user->can('download', $document), 403);
 
-        $disk = Storage::disk($document->disk ?? Document::STORAGE_DISK);
+        $diskName = $document->disk ?: Document::STORAGE_DISK;
+        $disk = Storage::disk($diskName);
 
-        abort_unless($disk->exists($document->file_path), 404);
-
+        abort_unless(filled($document->file_path) && $disk->exists($document->file_path), 404);
         return $disk->download(
             $document->file_path,
             $document->original_filename ?? $document->name,
