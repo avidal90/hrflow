@@ -103,7 +103,13 @@ class DocumentPolicy
             return true;
         }
 
-        return false;
+        return (string) $user->getKey() === (string) $document->user_id
+            && $document->is_visible_to_employee;
+    }
+
+    public function download(User $user, Document $document): bool
+    {
+        return $this->view($user, $document);
     }
 
     private function belongsToUsersTenant(User $user, int|string|null $tenantId): bool

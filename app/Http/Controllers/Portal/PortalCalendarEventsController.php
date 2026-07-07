@@ -106,16 +106,27 @@ class PortalCalendarEventsController extends Controller
                     ? $turno->name.' · '.substr((string) $turno->start_time, 0, 5).'-'.substr((string) $turno->end_time, 0, 5)
                     : 'Turno asignado';
 
-                $events->push([
+                $baseEvent = [
                     'id' => 'turno-'.$assignment->id,
                     'title' => $title,
-                    'start' => $eventStart,
-                    'end' => $eventEnd,
                     'allDay' => true,
                     'backgroundColor' => '#dbeafe',
                     'borderColor' => '#93c5fd',
                     'textColor' => '#1e40af',
-                ]);
+                ];
+
+                if ($turno && ! $turno->includes_weekends) {
+                    $events->push(array_merge($baseEvent, [
+                        'startRecur' => $eventStart,
+                        'endRecur' => $eventEnd,
+                        'daysOfWeek' => [1, 2, 3, 4, 5],
+                    ]));
+                } else {
+                    $events->push(array_merge($baseEvent, [
+                        'start' => $eventStart,
+                        'end' => $eventEnd,
+                    ]));
+                }
             });
 
         return response()->json($events->values());

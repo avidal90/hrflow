@@ -28,7 +28,11 @@ class DepartmentResource extends Resource
 
     protected static ?string $pluralModelLabel = 'departamentos';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Gestión de empresa';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $navigationLabel = 'Departamentos';
 

@@ -54,6 +54,17 @@ class PortalAuthenticatedSessionController extends Controller
             ]);
         }
 
+        /** @var User|null $user */
+        $user = Auth::user();
+
+        if ($user instanceof User && $user->tenant_id !== null && ! $user->isAccountActive()) {
+            $this->logoutSession($request);
+
+            throw ValidationException::withMessages([
+                'email' => __('Tu cuenta esta desactivada. Contacta con tu responsable de RR.HH.'),
+            ]);
+        }
+
         $request->session()->regenerate();
 
         return $this->redirectAfterLoginAttempt($request);

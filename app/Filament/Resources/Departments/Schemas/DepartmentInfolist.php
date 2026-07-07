@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Departments\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class DepartmentInfolist
@@ -11,20 +12,27 @@ class DepartmentInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('tenant.name')
-                    ->label('Empresa'),
-                TextEntry::make('name')
-                    ->label('Nombre'),
-                TextEntry::make('manager.employee_code')
-                    ->label('Responsable')
-                    ->placeholder('-'),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
+                Section::make('Datos del departamento')
+                    ->collapsible()
+                    ->schema([
+                        TextEntry::make('tenant.name')
+                            ->label('Empresa'),
+                        TextEntry::make('name')
+                            ->label('Nombre'),
+                        TextEntry::make('manager.name')
+                            ->label('Responsable')
+                            ->placeholder('-'),
+                        TextEntry::make('created_at')
+                            ->label('Creado')
+                            ->dateTime()
+                            ->placeholder('-'),
+                        TextEntry::make('updated_at')
+                            ->label('Actualizado')
+                            ->dateTime()
+                            ->placeholder('-'),
+                    ])
+                    ->columns(2),
             ])
-            ->columns(2);
+            ->columns(1);
     }
 }

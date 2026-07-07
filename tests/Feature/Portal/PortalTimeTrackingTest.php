@@ -7,8 +7,11 @@ use App\Livewire\Portal\TimeTracker;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\TimeEntry;
+use App\Models\Turno;
+use App\Models\TurnoAssignment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -137,6 +140,62 @@ class PortalTimeTrackingTest extends TestCase
             ->assertStatus(422); // no hay activeEntry para este usuario
 
         $this->assertNull($entry->fresh()->check_out_time);
+    }
+
+    public function test_employee_sees_today_shift_summary_with_worked_and_remaining_hours(): void
+    {
+        Carbon::setTestNow('2026-07-06 11:30:00');
+
+        $tenant = Tenant::factory()->create();
+        $employee = $this->createEmployee($tenant);
+
+        $turno = Turno::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'name' => 'Turno Oficina',
+            'start_time' => '08:00:00',
+            'end_time' => '17:00:00',
+            'break_minutes' => 60,
+        ]);
+
+        TurnoAssignment::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'turno_id' => $turno->getKey(),
+            'user_id' => $employee->getKey(),
+            'valid_from' => '2026-07-01',
+            'valid_until' => '2026-07-31',
+        ]);
+
+        TimeEntry::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->id,
+            'work_date' => '2026-07-06',
+            'check_in_time' => '09:00:00',
+            'check_out_time' => '11:30:00',
+            'status' => TimeEntryStatus::Complete->value,
+        ]);
+
+        Livewire::actingAs($employee)
+            ->test(TimeTracker::class)
+            ->assertSee('Turno de hoy')
+            ->assertSee('Turno Oficina')
+            ->assertSee('08:00 - 17:00')
+            ->assertSee('8 h 00 min previstas')
+            ->assertSee('2 h 30 min')
+            ->assertSee('5 h 30 min');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_shift_summary_is_hidden_when_employee_has_no_turno_assigned_today(): void
+    {
+        $tenant = Tenant::factory()->create();
+        $employee = $this->createEmployee($tenant);
+
+        Livewire::actingAs($employee)
+            ->test(TimeTracker::class)
+            ->assertDontSee('Turno de hoy')
+            ->assertDontSee('Cumplidas')
+            ->assertDontSee('Pendientes');
     }
 
     // --- helpers ---

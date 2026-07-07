@@ -60,14 +60,9 @@ class LeaveRequests extends Component
         $user = auth()->user();
         abort_unless($user instanceof User, 403);
 
-        $usedDays = LeaveRequest::where('user_id', $user->id)
-            ->where('tenant_id', $user->tenant_id)
-            ->where('request_type', LeaveRequestType::Vacation->value)
-            ->where('status', LeaveRequestStatus::Approved->value)
-            ->get()
-            ->sum(fn (LeaveRequest $r): int => (int) $r->start_date->diffInDays($r->end_date) + 1);
+        abort_unless($user instanceof User, 403);
 
-        return max(0, (int) $user->annual_vacation_days - $usedDays);
+        return $user->remainingVacationDays();
     }
 
     public function submit(): void

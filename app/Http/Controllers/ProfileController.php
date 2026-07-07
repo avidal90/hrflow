@@ -43,12 +43,12 @@ class ProfileController extends Controller
         Gate::authorize('updateOwnProfile', $user);
 
         $path = $request->file('avatar')->store(
-            'avatars/'.$user->tenant_id.'/'.$user->getKey(),
-            'public',
+            'tenant/'.$user->tenant_id.'/'.$user->getKey(),
+            'avatars',
         );
 
         if (filled($user->avatar_path) && $user->avatar_path !== $path) {
-            Storage::disk('public')->delete($user->avatar_path);
+            Storage::disk('avatars')->delete($user->avatar_path);
         }
 
         $user->update([

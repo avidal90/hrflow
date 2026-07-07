@@ -13,7 +13,6 @@ use App\Models\Department;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\Turno;
-use App\Models\TurnoAssignment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Livewire\Livewire;
@@ -69,7 +68,7 @@ class TableFiltersTest extends TestCase
 
         Livewire::test(ListTurnos::class)
             ->assertTableFilterExists('tenant_id')
-            ->assertTableFilterExists('assignment_status');
+            ->assertTableFilterExists('includes_weekends');
     }
 
     public function test_user_role_filter_limits_visible_records(): void
@@ -133,7 +132,7 @@ class TableFiltersTest extends TestCase
             ->assertCanNotSeeTableRecords([$companyAdmin]);
     }
 
-    public function test_turno_assignment_filter_separates_assigned_and_unassigned_shifts(): void
+    public function test_turno_weekend_filter_separates_weekday_and_weekend_shifts(): void
     {
         $tenant = Tenant::factory()->create();
 
@@ -144,32 +143,23 @@ class TableFiltersTest extends TestCase
         ]);
         $companyAdmin->assignRole('company-admin');
 
-        $employeeUser = User::factory()->create([
+        $weekdayTurno = Turno::factory()->create([
             'tenant_id' => $tenant->getKey(),
-        ]);
-        $employeeUser->assignRole('employee');
-
-        $assignedTurno = Turno::factory()->create([
-            'tenant_id' => $tenant->getKey(),
+            'includes_weekends' => false,
         ]);
 
-        $unassignedTurno = Turno::factory()->create([
+        $weekendTurno = Turno::factory()->create([
             'tenant_id' => $tenant->getKey(),
-        ]);
-
-        TurnoAssignment::factory()->create([
-            'tenant_id' => $tenant->getKey(),
-            'turno_id' => $assignedTurno->getKey(),
-            'user_id' => $employeeUser->getKey(),
+            'includes_weekends' => true,
         ]);
 
         $this->actingAs($companyAdmin);
 
         Livewire::test(ListTurnos::class)
-            ->assertCanSeeTableRecords([$assignedTurno, $unassignedTurno])
-            ->filterTable('assignment_status', 'assigned')
-            ->assertCanSeeTableRecords([$assignedTurno])
-            ->assertCanNotSeeTableRecords([$unassignedTurno]);
+            ->assertCanSeeTableRecords([$weekdayTurno, $weekendTurno])
+            ->filterTable('includes_weekends', false)
+            ->assertCanSeeTableRecords([$weekdayTurno])
+            ->assertCanNotSeeTableRecords([$weekendTurno]);
     }
 
     private function createRoles(): void

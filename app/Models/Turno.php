@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Validation\ValidationException;
 
-#[Fillable(['tenant_id', 'name', 'start_time', 'end_time', 'break_minutes', 'total_hours'])]
+#[Fillable(['tenant_id', 'name', 'start_time', 'end_time', 'break_minutes', 'includes_weekends', 'total_hours'])]
 #[UsePolicy(TurnoPolicy::class)]
 class Turno extends Model
 {
@@ -56,6 +56,7 @@ class Turno extends Model
         return [
             'break_minutes' => 'integer',
             'total_hours' => 'decimal:2',
+            'includes_weekends' => 'boolean',
         ];
     }
 

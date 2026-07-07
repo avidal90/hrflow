@@ -27,7 +27,11 @@ class TurnoResource extends Resource
 
     protected static ?string $pluralModelLabel = 'turnos';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTableCells;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Turnos y festivos';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $navigationLabel = 'Turnos';
 

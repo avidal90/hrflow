@@ -23,8 +23,9 @@ class UsersTable
             ->columns([
                 ImageColumn::make('avatar_path')
                     ->label('Foto')
-                    ->disk('public')
-                    ->circular(),
+                    ->state(fn (User $record): ?string => $record->getFilamentAvatarUrl())
+                    ->circular()
+                    ->defaultImageUrl(null),
                 TextColumn::make('tenant.name')
                     ->label('Empresa')
                     ->visible(fn (): bool => self::currentUserIsSuperAdmin())

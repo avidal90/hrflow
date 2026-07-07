@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Turnos\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class TurnoInfolist
@@ -11,21 +12,26 @@ class TurnoInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('tenant.name')
-                    ->label('Empresa'),
-                TextEntry::make('name')
-                    ->label('Nombre'),
-                TextEntry::make('start_time')
-                    ->label('Hora inicio'),
-                TextEntry::make('end_time')
-                    ->label('Hora fin'),
-                TextEntry::make('break_minutes')
-                    ->label('Descanso (min)'),
-                TextEntry::make('total_hours')
-                    ->label('Horas jornada'),
-                TextEntry::make('turnoAssignments_count')
-                    ->label('Asignaciones'),
+                Section::make('Datos del turno')
+                    ->collapsible()
+                    ->schema([
+                        TextEntry::make('tenant.name')
+                            ->label('Empresa'),
+                        TextEntry::make('name')
+                            ->label('Nombre'),
+                        TextEntry::make('start_time')
+                            ->label('Hora inicio'),
+                        TextEntry::make('end_time')
+                            ->label('Hora fin'),
+                        TextEntry::make('break_minutes')
+                            ->label('Descanso (min)'),
+                        TextEntry::make('total_hours')
+                            ->label('Horas jornada'),
+                        TextEntry::make('turnoAssignments_count')
+                            ->label('Asignaciones'),
+                    ])
+                    ->columns(2),
             ])
-            ->columns(2);
+            ->columns(1);
     }
 }
