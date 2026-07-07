@@ -20,12 +20,16 @@ class NotificationBell extends Component
     #[Computed]
     public function notifications(): Collection
     {
-        return auth()->user()
-            ?->notifications()
+        $user = auth()->user();
+
+        if ($user === null) {
+            return new Collection();
+        }
+
+        return $user->notifications()
             ->latest()
             ->limit(10)
-            ->get()
-            ?? collect();
+            ->get();
     }
 
     public function toggle(): void
