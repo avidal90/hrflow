@@ -37,7 +37,8 @@ class NotificationBell extends Component
         $this->open = ! $this->open;
 
         if ($this->open) {
-            auth()->user()?->unreadNotifications()->update(['read_at' => now()]);
+            $visibleIds = $this->notifications->pluck('id');
+            auth()->user()?->unreadNotifications()->whereIn('id', $visibleIds)->update(['read_at' => now()]);
             unset($this->unreadCount);
         }
     }
