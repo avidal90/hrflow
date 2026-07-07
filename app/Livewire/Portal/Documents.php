@@ -70,7 +70,7 @@ class Documents extends Component
         return view('livewire.portal.documents', [
             'documents' => $documents,
             'activeFolderEnum' => $this->activeFolder !== null
-                ? DocumentFolder::from($this->activeFolder)
+                ? DocumentFolder::tryFrom($this->activeFolder)
                 : null,
             'tenantKey' => (string) $user->tenant_id,
         ]);
