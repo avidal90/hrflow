@@ -40,7 +40,7 @@ class PortalDashboardController extends Controller
             ->count();
 
         $usedVacationDays = $user->approvedVacationDaysConsumedToDate();
-        $remainingVacationDays = max(0, (int) $user->annual_vacation_days - $usedVacationDays);
+        $remainingVacationDays = $user->remainingVacationDays();
 
         $todayOffReason = $todayTimeEntry === null ? $user->todayOffReason() : null;
 
