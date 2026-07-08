@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\PortalAuthenticatedSessionController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/ping', fn () => 'pong');
+
 Route::get('/', function () {
     return view('public.home');
 })->name('public.home');
