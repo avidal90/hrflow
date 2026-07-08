@@ -238,7 +238,7 @@ class PortalLeaveRequestsTest extends TestCase
 
         Livewire::actingAs($employee)
             ->test(LeaveRequests::class)
-            ->assertSee('Todavia no has enviado ninguna solicitud');
+            ->assertSee('Todavía no has enviado ninguna solicitud');
     }
 
     // --- helpers ---

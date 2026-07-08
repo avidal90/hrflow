@@ -65,7 +65,7 @@ class PortalDashboardController extends Controller
     private function calendarDescription(?LeaveRequest $leaveRequest): string
     {
         if (! $leaveRequest instanceof LeaveRequest) {
-            return 'No tienes ausencias aprobadas proximas en tu calendario.';
+            return 'No tienes ausencias aprobadas próximas en tu calendario.';
         }
 
         $today = today();
@@ -87,7 +87,7 @@ class PortalDashboardController extends Controller
         }
 
         return sprintf(
-            'Tu ausencia aprobada mas cercana fue del %s al %s.',
+            'Tu ausencia aprobada más cercana fue del %s al %s.',
             $startDate?->format('d/m/Y') ?? '-',
             $endDate?->format('d/m/Y') ?? '-'
         );
@@ -180,7 +180,7 @@ class PortalDashboardController extends Controller
     private function timeTrackingDescription(?TimeEntry $timeEntry): string
     {
         if (! $timeEntry instanceof TimeEntry) {
-            return 'Todavia no has registrado jornada hoy.';
+            return 'Todavía no has registrado jornada hoy.';
         }
 
         $checkInTime = $timeEntry->check_in_time !== null

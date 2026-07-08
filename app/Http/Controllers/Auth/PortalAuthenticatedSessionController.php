@@ -61,7 +61,7 @@ class PortalAuthenticatedSessionController extends Controller
             $this->logoutSession($request);
 
             throw ValidationException::withMessages([
-                'email' => __('Tu cuenta esta desactivada. Contacta con tu responsable de RR.HH.'),
+                'email' => __('Tu cuenta está desactivada. Contacta con tu responsable de RR.HH.'),
             ]);
         }
 
@@ -75,8 +75,8 @@ class PortalAuthenticatedSessionController extends Controller
         $validated = $request->validate([
             'tenant' => ['required', 'string', Rule::exists('tenants', 'id')],
         ], [
-            'tenant.required' => __('Indica el codigo de tu empresa para abrir el portal.'),
-            'tenant.exists' => __('No hemos podido abrir ese portal. Revisa el codigo de empresa.'),
+            'tenant.required' => __('Indica el código de tu empresa para abrir el portal.'),
+            'tenant.exists' => __('No hemos podido abrir ese portal. Revisa el código de empresa.'),
         ]);
 
         return to_route('portal.login', [
@@ -141,7 +141,7 @@ class PortalAuthenticatedSessionController extends Controller
             $this->logoutSession($request);
 
             throw ValidationException::withMessages([
-                'email' => __('Este acceso es solo para administracion. Usa el portal de tu empresa para fichar y gestionar solicitudes.'),
+                'email' => __('Este acceso es solo para administración. Usa el portal de tu empresa para fichar y gestionar solicitudes.'),
             ]);
         }
 
@@ -163,18 +163,18 @@ class PortalAuthenticatedSessionController extends Controller
             return [
                 'title' => 'Portal del empleado | HRFlow',
                 'heading' => 'Accede al portal de '.$tenantName,
-                'description' => 'Entra para fichar, consultar tu calendario y gestionar solicitudes. Si tu rol tambien tiene permisos internos, veras el acceso a administracion dentro del portal.',
+                'description' => 'Entra para fichar, consultar tu calendario y gestionar solicitudes. Si tu rol también tiene permisos internos, verás el acceso a administración dentro del portal.',
                 'form_action' => route('portal.login.store', $this->tenantRouteParameters()),
-                'footer_prefix' => 'Si necesitas el backoffice, usa el acceso de administracion desde',
+                'footer_prefix' => 'Si necesitas el backoffice, usa el acceso de administración desde',
                 'footer_link_url' => route('login'),
                 'footer_link_text' => 'la zona interna',
             ];
         }
 
         return [
-            'title' => 'Administracion | HRFlow',
+            'title' => 'Administración | HRFlow',
             'heading' => 'Acceso administrativo',
-            'description' => 'Este acceso esta reservado al backoffice en Filament para RRHH, responsables y perfiles administrativos.',
+            'description' => 'Este acceso está reservado al backoffice en Filament para RRHH, responsables y perfiles administrativos.',
             'form_action' => route('login.store'),
             'footer_prefix' => 'Si vienes a fichar o a pedir vacaciones, usa',
             'footer_link_url' => route('public.access'),

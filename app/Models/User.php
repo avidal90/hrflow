@@ -117,7 +117,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
                     if ($currentUsers >= $tenant->employee_license_limit) {
                         throw ValidationException::withMessages([
-                            'tenant_id' => __('Se ha alcanzado el limite de licencias para esta empresa.'),
+                            'tenant_id' => __('Se ha alcanzado el límite de licencias para esta empresa.'),
                         ]);
                     }
                 }
@@ -134,7 +134,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
             if ($exists) {
                 throw ValidationException::withMessages([
-                    'email' => __('El email ya esta en uso.'),
+                    'email' => __('El email ya está en uso.'),
                 ]);
             }
         });

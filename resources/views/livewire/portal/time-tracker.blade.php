@@ -97,7 +97,7 @@
                         </div>
                         <p class="mt-3 font-mono text-5xl font-semibold tabular-nums tracking-tight text-slate-200">
                             00:00:00</p>
-                        <p class="mt-2 text-sm text-slate-500">Pulsa el boton para iniciar tu jornada laboral.</p>
+                        <p class="mt-2 text-sm text-slate-500">Pulsa el botón para iniciar tu jornada laboral.</p>
                     </div>
 
                     <button wire:click="startTracking" wire:loading.attr="disabled"
@@ -147,12 +147,12 @@
     <div class="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
         <div class="border-b border-slate-100 px-5 py-4">
             <h2 class="text-sm font-semibold text-slate-900">Historial de fichajes</h2>
-            <p class="mt-0.5 text-xs text-slate-500">Tus ultimos registros de jornada</p>
+            <p class="mt-0.5 text-xs text-slate-500">Tus últimos registros de jornada</p>
         </div>
 
         @if ($recentEntries->isEmpty())
             <div class="px-5 py-12 text-center">
-                <p class="text-sm text-slate-500">Todavia no tienes registros de jornada.</p>
+                <p class="text-sm text-slate-500">Todavía no tienes registros de jornada.</p>
             </div>
         @else
             <div class="overflow-x-auto">
@@ -163,7 +163,7 @@
                             <th class="px-5 py-3 text-left">Fecha</th>
                             <th class="px-5 py-3 text-center">Entrada</th>
                             <th class="px-5 py-3 text-center">Salida</th>
-                            <th class="px-5 py-3 text-center">Duracion</th>
+                            <th class="px-5 py-3 text-center">Duración</th>
                             <th class="px-5 py-3 text-center">Estado</th>
                         </tr>
                     </thead>

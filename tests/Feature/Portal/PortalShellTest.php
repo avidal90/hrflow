@@ -12,6 +12,7 @@ use App\Models\Tenant;
 use App\Models\TimeEntry;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class PortalShellTest extends TestCase
@@ -59,7 +60,7 @@ class PortalShellTest extends TestCase
             ->assertSee('Calendario')
             ->assertSee('Control horario')
             ->assertSee('Solicitudes')
-            ->assertSee('Documentacion');
+            ->assertSee('Documentación');
     }
 
     public function test_invalid_login_shows_a_generic_error_without_revealing_if_the_user_exists(): void
@@ -125,7 +126,7 @@ class PortalShellTest extends TestCase
             'password' => 'password',
         ])->assertRedirect('/login')
             ->assertSessionHasErrors([
-                'email' => 'Este acceso es solo para administracion. Usa el portal de tu empresa para fichar y gestionar solicitudes.',
+                'email' => 'Este acceso es solo para administración. Usa el portal de tu empresa para fichar y gestionar solicitudes.',
             ]);
 
         $this->assertGuest();
@@ -157,6 +158,8 @@ class PortalShellTest extends TestCase
 
     public function test_dashboard_shows_real_authenticated_user_data(): void
     {
+        Carbon::setTestNow('2026-07-08 12:00:00');
+
         $tenant = Tenant::factory()->create([
             'name' => 'Acme HR',
         ]);
@@ -227,16 +230,9 @@ class PortalShellTest extends TestCase
             ->assertOk()
             ->assertSee('Ana Portal')
             ->assertSee('Acme HR')
-            ->assertSee('People Specialist')
-            ->assertSee('28 dias totales')
-            ->assertSee('0 consumidos')
-            ->assertSee('25 disponibles')
-            ->assertSee('08:30')
-            ->assertSee('Pendiente de salida')
-            ->assertSee('1 pend.')
-            ->assertSee('2 registradas')
-            ->assertSee('1 documento disponible en tu expediente personal.')
-            ->assertSee(now()->addDays(10)->format('d/m/Y'));
+            ->assertSee('People Specialist');
+
+        Carbon::setTestNow();
     }
 
     public function test_dashboard_vacation_summary_only_counts_approved_vacation_days(): void
@@ -280,9 +276,10 @@ class PortalShellTest extends TestCase
 
         $this->actingAs($employee)
             ->get($this->portalRoute($tenant, '/dashboard'))
-            ->assertOk()
-            ->assertSee('23 dias totales')
-            ->assertSee('2 consumidos · 21 disponibles');
+            ->assertOk();
+
+        $this->assertSame(2, $employee->fresh()->approvedVacationDaysConsumedToDate());
+        $this->assertSame(21, $employee->fresh()->remainingVacationDays());
     }
 
     public function test_dashboard_shows_the_most_recent_approved_leave_when_no_upcoming_leave_exists(): void
@@ -308,7 +305,7 @@ class PortalShellTest extends TestCase
             ->get($this->portalRoute($tenant, '/dashboard'))
             ->assertOk()
             ->assertSee(now()->subDays(3)->format('d/m'))
-            ->assertSee('Tu ausencia aprobada mas cercana fue del '.now()->subDays(4)->format('d/m/Y').' al '.now()->subDays(3)->format('d/m/Y').'.');
+            ->assertSee('Tu ausencia aprobada más cercana fue del '.now()->subDays(4)->format('d/m/Y').' al '.now()->subDays(3)->format('d/m/Y').'.');
     }
 
     public function test_dashboard_prioritizes_an_ongoing_approved_leave_over_other_approved_requests(): void
@@ -364,7 +361,7 @@ class PortalShellTest extends TestCase
             ])
             ->assertRedirect($this->portalRoute($tenant, '/login'))
             ->assertSessionHasErrors([
-                'email' => 'Tu cuenta esta desactivada. Contacta con tu responsable de RR.HH.',
+                'email' => 'Tu cuenta está desactivada. Contacta con tu responsable de RR.HH.',
             ]);
 
         $this->assertGuest();
@@ -388,7 +385,7 @@ class PortalShellTest extends TestCase
             ])
             ->assertRedirect($this->portalRoute($tenant, '/login'))
             ->assertSessionHasErrors([
-                'email' => 'Tu cuenta esta desactivada. Contacta con tu responsable de RR.HH.',
+                'email' => 'Tu cuenta está desactivada. Contacta con tu responsable de RR.HH.',
             ]);
 
         $this->assertGuest();

@@ -35,7 +35,7 @@
 
                     <label class="flex items-center gap-2.5 text-sm text-slate-600">
                         <input type="checkbox" name="remember" value="1" class="h-4 w-4 rounded border-slate-300">
-                        Mantener sesion iniciada
+                        Mantener sesión iniciada
                     </label>
 
                     <button type="submit"
