@@ -10,6 +10,7 @@ deploy:
       - find $(pwd) -type d -not -name "logs" -exec chmod 775 {} \;
       - chmod -R o+w storage bootstrap/cache
       - php artisan migrate --force -n
+      - php artisan db:seed --force -n
       - php artisan optimize:clear
       - php artisan storage:link
       - php artisan optimize
@@ -27,6 +28,7 @@ deploy:
       - find $(pwd) -type d -not -name "logs" -exec chmod 775 {} \;
       - chmod -R o+w storage bootstrap/cache
       - php artisan migrate --force -n
+      - php artisan db:seed --force -n
       - php artisan optimize:clear
       - php artisan storage:link
       - php artisan optimize
