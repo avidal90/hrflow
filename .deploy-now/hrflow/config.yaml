@@ -33,3 +33,8 @@ deploy:
       - php artisan storage:link
       - php artisan optimize
       - php artisan up
+
+    runtime:
+      cron-jobs:
+        - command: php artisan schedule:run
+          schedule: "* * * * *"
