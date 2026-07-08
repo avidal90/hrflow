@@ -51,6 +51,7 @@ class TimeTracker extends Component
         $this->resetPage();
     }
 
+    #[\Livewire\Attributes\Poll('30s')]
     public function syncActiveEntry(): void
     {
         $user = auth()->user();
