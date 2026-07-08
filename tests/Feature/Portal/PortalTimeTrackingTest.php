@@ -48,6 +48,29 @@ class PortalTimeTrackingTest extends TestCase
         ]);
     }
 
+    public function test_start_tracking_uses_tenant_timezone_for_check_in_time(): void
+    {
+        $tenant = Tenant::factory()->create(['timezone' => 'Europe/Madrid']);
+        $employee = $this->createEmployee($tenant);
+
+        config(['app.timezone' => 'UTC']);
+        date_default_timezone_set('UTC');
+        Carbon::setTestNow(Carbon::parse('2026-07-08 19:02:00', 'UTC'));
+
+        Livewire::actingAs($employee)
+            ->test(TimeTracker::class)
+            ->call('startTracking');
+
+        $this->assertDatabaseHas(TimeEntry::class, [
+            'user_id' => $employee->id,
+            'tenant_id' => $tenant->getKey(),
+            'check_in_time' => '21:02:00',
+            'status' => TimeEntryStatus::Incomplete->value,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
     public function test_employee_can_stop_tracking(): void
     {
         $tenant = Tenant::factory()->create();
@@ -72,6 +95,53 @@ class PortalTimeTrackingTest extends TestCase
             'user_id' => $employee->id,
             'check_out_time' => null,
         ]);
+    }
+
+    public function test_active_tracker_shows_initial_elapsed_time_on_first_render(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-08 20:45:15', 'Europe/Madrid'));
+
+        $tenant = Tenant::factory()->create();
+        $employee = $this->createEmployee($tenant);
+
+        TimeEntry::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->id,
+            'work_date' => '2026-07-08',
+            'check_in_time' => '20:45:00',
+            'check_out_time' => null,
+            'status' => TimeEntryStatus::Incomplete->value,
+        ]);
+
+        Livewire::actingAs($employee)
+            ->test(TimeTracker::class)
+            ->assertSee('00:00:15');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_active_tracker_frontend_uses_relative_client_counter_base(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-08 20:45:15', 'Europe/Madrid'));
+
+        $tenant = Tenant::factory()->create();
+        $employee = $this->createEmployee($tenant);
+
+        TimeEntry::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->id,
+            'work_date' => '2026-07-08',
+            'check_in_time' => '20:45:00',
+            'check_out_time' => null,
+            'status' => TimeEntryStatus::Incomplete->value,
+        ]);
+
+        Livewire::actingAs($employee)
+            ->test(TimeTracker::class)
+            ->assertSee('baseElapsed: 15')
+            ->assertDontSee('startTs:');
+
+        Carbon::setTestNow();
     }
 
     public function test_employee_cannot_start_two_active_sessions(): void

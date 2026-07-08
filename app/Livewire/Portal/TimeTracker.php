@@ -30,11 +30,13 @@ class TimeTracker extends Component
         abort_unless($user instanceof User, 403);
         abort_unless($this->activeEntry === null, 422);
 
+        $now = $this->tenantNow($user);
+
         TimeEntry::create([
             'tenant_id' => $user->tenant_id,
             'user_id' => $user->id,
-            'work_date' => today()->toDateString(),
-            'check_in_time' => now()->format('H:i:s'),
+            'work_date' => $now->toDateString(),
+            'check_in_time' => $now->format('H:i:s'),
         ]);
         $this->resetPage();
         $this->syncActiveEntry();
@@ -47,7 +49,7 @@ class TimeTracker extends Component
         abort_unless($this->activeEntry !== null, 422);
         abort_unless((int) $this->activeEntry->user_id === (int) $user->id, 403);
 
-        $this->activeEntry->update(['check_out_time' => now()->format('H:i:s')]);
+        $this->activeEntry->update(['check_out_time' => $this->tenantNow($user)->format('H:i:s')]);
         $this->activeEntry = null;
         $this->resetPage();
     }
@@ -76,23 +78,38 @@ class TimeTracker extends Component
             ->orderByDesc('check_in_time')
             ->paginate(20);
 
-        $checkInTimestamp = 0;
+        $elapsedSeconds = 0;
+        $elapsedLabel = '00:00:00';
+        $tenantNow = $this->tenantNow($user);
+        $tenantTimezone = $this->tenantTimezone($user);
 
         if ($this->activeEntry) {
             $checkIn = CarbonImmutable::parse(
-                $this->activeEntry->work_date->toDateString().' '.$this->activeEntry->check_in_time
+                $this->activeEntry->work_date->toDateString().' '.$this->activeEntry->check_in_time,
+                $tenantTimezone
             );
-            $checkInTimestamp = $checkIn->timestamp;
+            $elapsedSeconds = max(0, $tenantNow->timestamp - $checkIn->timestamp);
+            $elapsedLabel = $this->formatElapsedClock($elapsedSeconds);
         }
 
         $todayShiftSummary = $this->todayShiftSummary($user);
 
         return view('livewire.portal.time-tracker', [
             'recentEntries' => $recentEntries,
-            'checkInTimestamp' => $checkInTimestamp,
+            'elapsedSeconds' => $elapsedSeconds,
+            'elapsedLabel' => $elapsedLabel,
             'todayShiftSummary' => $todayShiftSummary,
             'todayOffReason' => $this->activeEntry === null ? $user->todayOffReason() : null,
         ]);
+    }
+
+    private function formatElapsedClock(int $seconds): string
+    {
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+        $remainingSeconds = $seconds % 60;
+
+        return sprintf('%02d:%02d:%02d', $hours, $minutes, $remainingSeconds);
     }
 
     /**
@@ -100,7 +117,7 @@ class TimeTracker extends Component
      */
     private function todayShiftSummary(User $user): ?array
     {
-        $today = CarbonImmutable::today();
+        $today = CarbonImmutable::today($this->tenantTimezone($user));
 
         $assignment = TurnoAssignment::query()
             ->where('user_id', $user->id)
@@ -140,22 +157,44 @@ class TimeTracker extends Component
 
     private function workedMinutesToday(User $user, CarbonImmutable $today): int
     {
+        $tenantTimezone = $this->tenantTimezone($user);
+
         return (int) TimeEntry::query()
             ->where('user_id', $user->id)
             ->where('tenant_id', $user->tenant_id)
             ->whereDate('work_date', $today->toDateString())
             ->get()
-            ->sum(function (TimeEntry $entry): int {
-                $checkIn = CarbonImmutable::parse($entry->work_date->toDateString().' '.$entry->check_in_time);
+            ->sum(function (TimeEntry $entry) use ($tenantTimezone, $user): int {
+                $checkIn = CarbonImmutable::parse($entry->work_date->toDateString().' '.$entry->check_in_time, $tenantTimezone);
 
                 if ($entry->check_out_time !== null) {
-                    $checkOut = CarbonImmutable::parse($entry->work_date->toDateString().' '.$entry->check_out_time);
+                    $checkOut = CarbonImmutable::parse($entry->work_date->toDateString().' '.$entry->check_out_time, $tenantTimezone);
 
                     return (int) $checkIn->diffInMinutes($checkOut);
                 }
 
-                return (int) $checkIn->diffInMinutes(now());
+                return (int) $checkIn->diffInMinutes($this->tenantNow($user));
             });
+    }
+
+    private function tenantNow(User $user): CarbonImmutable
+    {
+        return CarbonImmutable::now($this->tenantTimezone($user));
+    }
+
+    private function tenantTimezone(User $user): string
+    {
+        $timezone = tenant()?->timezone;
+
+        if (! is_string($timezone) || ! in_array($timezone, timezone_identifiers_list(), true)) {
+            $timezone = $user->tenant()->value('timezone');
+        }
+
+        if (! is_string($timezone) || ! in_array($timezone, timezone_identifiers_list(), true)) {
+            return config('app.timezone', 'UTC');
+        }
+
+        return $timezone;
     }
 
     private function shiftTotalMinutes(Turno $turno): int

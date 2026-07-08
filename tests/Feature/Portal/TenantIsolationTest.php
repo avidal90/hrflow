@@ -59,6 +59,22 @@ class TenantIsolationTest extends TestCase
             ->assertOk();
     }
 
+    public function test_tenant_timezone_is_applied_on_portal_requests(): void
+    {
+        $tenant = Tenant::factory()->create(['timezone' => 'Europe/Madrid']);
+        $user = $this->createEmployee($tenant);
+
+        config(['app.timezone' => 'UTC']);
+        date_default_timezone_set('UTC');
+
+        $this->actingAs($user)
+            ->get($this->portalRoute($tenant, '/dashboard'))
+            ->assertOk();
+
+        $this->assertSame('Europe/Madrid', config('app.timezone'));
+        $this->assertSame('Europe/Madrid', date_default_timezone_get());
+    }
+
     public function test_cross_tenant_access_does_not_expose_data_from_another_tenant(): void
     {
         $ownTenant = Tenant::factory()->create(['name' => 'Empresa Propia']);

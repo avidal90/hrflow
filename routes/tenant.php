@@ -10,6 +10,7 @@ use App\Http\Controllers\Portal\PortalDocumentDownloadController;
 use App\Http\Controllers\Portal\PortalDocumentsController;
 use App\Http\Controllers\Portal\PortalRequestsController;
 use App\Http\Controllers\Portal\PortalTimeTrackingController;
+use App\Http\Middleware\ApplyTenantTimezone;
 use App\Http\Middleware\EnsureUserBelongsToTenant;
 use Illuminate\Support\Facades\Route;
 use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
@@ -29,6 +30,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyByPath;
 Route::middleware([
     'web',
     InitializeTenancyByPath::class,
+    ApplyTenantTimezone::class,
 ])->prefix('/portal/{tenant}')->group(function () {
     Route::get('/login', [PortalAuthenticatedSessionController::class, 'create'])->name('portal.login');
     Route::post('/login', [PortalAuthenticatedSessionController::class, 'store'])
