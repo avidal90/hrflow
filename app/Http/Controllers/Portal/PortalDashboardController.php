@@ -107,7 +107,9 @@ class PortalDashboardController extends Controller
             return $startDate->format('d/m');
         }
 
-        return $endDate?->format('d/m') ?? $startDate?->format('d/m') ?? '-';
+        return $endDate instanceof Carbon
+            ? $endDate->format('d/m')
+            : ($startDate instanceof Carbon ? $startDate->format('d/m') : '-');
     }
 
     private function nearestApprovedLeaveRequest(User $user): ?LeaveRequest

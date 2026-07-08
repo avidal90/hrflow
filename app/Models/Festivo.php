@@ -10,7 +10,11 @@ use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon $date
+ */
 #[Fillable(['tenant_id', 'date'])]
 #[UsePolicy(FestivoPolicy::class)]
 class Festivo extends Model
@@ -25,6 +29,7 @@ class Festivo extends Model
         ];
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

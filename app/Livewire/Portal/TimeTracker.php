@@ -9,7 +9,6 @@ use App\Models\TurnoAssignment;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\View\View;
-use Livewire\Attributes\Poll;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -52,7 +51,7 @@ class TimeTracker extends Component
         $this->resetPage();
     }
 
-    #[Poll('30s')]
+    #[\Livewire\Attributes\Poll('30s')]
     public function syncActiveEntry(): void
     {
         $user = auth()->user();
@@ -151,10 +150,10 @@ class TimeTracker extends Component
                 if ($entry->check_out_time !== null) {
                     $checkOut = CarbonImmutable::parse($entry->work_date->toDateString().' '.$entry->check_out_time);
 
-                    return $checkIn->diffInMinutes($checkOut);
+                    return (int) $checkIn->diffInMinutes($checkOut);
                 }
 
-                return $checkIn->diffInMinutes(now());
+                return (int) $checkIn->diffInMinutes(now());
             });
     }
 

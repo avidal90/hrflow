@@ -12,6 +12,9 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+/**
+ * @property Collection<string, int> $folderCounts
+ */
 class Documents extends Component
 {
     use WithPagination;
@@ -31,6 +34,7 @@ class Documents extends Component
         $this->resetPage();
     }
 
+    /** @return Collection<string, int> */
     #[Computed]
     public function folderCounts(): Collection
     {

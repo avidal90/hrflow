@@ -13,8 +13,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @property Carbon $work_date
+ * @property TimeEntryStatus $status
+ */
 #[Fillable(['tenant_id', 'user_id', 'work_date', 'check_in_time', 'check_out_time', 'duration_minutes', 'status', 'notes'])]
 #[UsePolicy(TimeEntryPolicy::class)]
 class TimeEntry extends Model
@@ -26,7 +31,7 @@ class TimeEntry extends Model
     {
         static::saving(function (self $timeEntry): void {
             if (blank($timeEntry->check_out_time)) {
-                $timeEntry->status = TimeEntryStatus::Incomplete->value;
+                $timeEntry->status = TimeEntryStatus::Incomplete;
                 $timeEntry->duration_minutes = null;
 
                 return;
@@ -41,8 +46,8 @@ class TimeEntry extends Model
                 ]);
             }
 
-            $timeEntry->duration_minutes = $checkIn->diffInMinutes($checkOut);
-            $timeEntry->status = TimeEntryStatus::Complete->value;
+            $timeEntry->duration_minutes = (int) $checkIn->diffInMinutes($checkOut);
+            $timeEntry->status = TimeEntryStatus::Complete;
         });
     }
 
@@ -54,16 +59,22 @@ class TimeEntry extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeVisibleToUser(Builder $query, User $user): Builder
     {
         if ($user->isSuperAdmin()) {

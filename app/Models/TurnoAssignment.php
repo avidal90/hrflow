@@ -14,6 +14,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @property Turno|null $turno
+ */
 #[Fillable(['tenant_id', 'turno_id', 'user_id', 'valid_from', 'valid_until'])]
 #[UsePolicy(TurnoAssignmentPolicy::class)]
 class TurnoAssignment extends Model
@@ -30,7 +33,7 @@ class TurnoAssignment extends Model
                 ]);
             }
 
-            $turnoAssignment->tenant_id ??= $turnoAssignment->user?->tenant_id
+            $turnoAssignment->tenant_id ??= $turnoAssignment->user->tenant_id
                 ?? $turnoAssignment->turno?->tenant_id;
 
             if (
@@ -75,21 +78,28 @@ class TurnoAssignment extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<Turno, $this> */
     public function turno(): BelongsTo
     {
         return $this->belongsTo(Turno::class);
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeActiveOn(Builder $query, CarbonImmutable|string|null $date = null): Builder
     {
         $targetDate = CarbonImmutable::parse($date ?? now())->startOfDay();
@@ -107,6 +117,10 @@ class TurnoAssignment extends Model
             });
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
         if ($user->isSuperAdmin()) {

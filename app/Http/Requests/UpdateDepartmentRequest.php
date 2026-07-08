@@ -71,6 +71,6 @@ class UpdateDepartmentRequest extends FormRequest
 
     private function resolveTenantId(Department $department): string
     {
-        return (string) ($this->input('tenant_id') ?? $department->tenant_id ?? $this->user()?->tenant_id ?? '');
+        return (string) ($this->input('tenant_id') ?? $department->tenant_id ?? $this->user()->tenant_id ?? '');
     }
 }

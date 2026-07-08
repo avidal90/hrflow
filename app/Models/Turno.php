@@ -60,16 +60,22 @@ class Turno extends Model
         ];
     }
 
+    /** @return HasMany<TurnoAssignment, $this> */
     public function turnoAssignments(): HasMany
     {
         return $this->hasMany(TurnoAssignment::class);
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
         if ($user->isSuperAdmin()) {

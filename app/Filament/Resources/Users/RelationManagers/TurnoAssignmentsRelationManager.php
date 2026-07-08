@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\RelationManagers;
 
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -43,7 +44,7 @@ class TurnoAssignmentsRelationManager extends RelationManager
                         name: 'turno',
                         titleAttribute: 'name',
                         modifyQueryUsing: function (Builder $query): void {
-                            $query->where('tenant_id', $this->getOwnerRecord()->tenant_id)
+                            $query->where('tenant_id', $this->ownerUser()->tenant_id)
                                 ->orderBy('name');
                         },
                     )
@@ -85,7 +86,7 @@ class TurnoAssignmentsRelationManager extends RelationManager
                         name: 'turno',
                         titleAttribute: 'name',
                         modifyQueryUsing: function (Builder $query): void {
-                            $query->where('tenant_id', $this->getOwnerRecord()->tenant_id)
+                            $query->where('tenant_id', $this->ownerUser()->tenant_id)
                                 ->orderBy('name');
                         },
                     )
@@ -126,11 +127,21 @@ class TurnoAssignmentsRelationManager extends RelationManager
      */
     private function mutateFormData(array $data): array
     {
-        $ownerRecord = $this->getOwnerRecord();
+        $ownerUser = $this->ownerUser();
 
-        $data['user_id'] = $ownerRecord->getKey();
-        $data['tenant_id'] = $ownerRecord->tenant_id;
+        $data['user_id'] = $ownerUser->getKey();
+        $data['tenant_id'] = $ownerUser->tenant_id;
 
         return $data;
+    }
+
+    private function ownerUser(): User
+    {
+        $record = $this->getOwnerRecord();
+        if (! $record instanceof User) {
+            throw new \RuntimeException('Expected User as owner record.');
+        }
+
+        return $record;
     }
 }

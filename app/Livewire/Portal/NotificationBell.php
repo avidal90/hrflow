@@ -3,10 +3,14 @@
 namespace App\Livewire\Portal;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
+/**
+ * @property Collection<int, DatabaseNotification> $notifications
+ */
 class NotificationBell extends Component
 {
     public bool $open = false;
@@ -17,6 +21,7 @@ class NotificationBell extends Component
         return auth()->user()?->unreadNotifications()->count() ?? 0;
     }
 
+    /** @return Collection<int, DatabaseNotification> */
     #[Computed]
     public function notifications(): Collection
     {
