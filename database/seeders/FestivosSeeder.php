@@ -27,7 +27,7 @@ class FestivosSeeder extends Seeder
         Tenant::query()
             ->whereKeyNot(Tenant::principalTenantId())
             ->get()
-            ->each(function (Tenant $tenant) use ($exampleFestivos): void {
+            ->each(function ($tenant) use ($exampleFestivos): void {
                 $rows = [];
 
                 foreach (array_keys($exampleFestivos) as $date) {

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\RelationManagers;
 
 use App\Enums\DocumentFolder;
 use App\Models\Document;
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -151,9 +152,9 @@ class DocumentsRelationManager extends RelationManager
      */
     private function mutateFormDataBeforeCreate(array $data): array
     {
-        $ownerRecord = $this->getOwnerRecord();
-        $tenantId = (string) $ownerRecord->tenant_id;
-        $userId = $ownerRecord->getKey();
+        $ownerUser = $this->ownerUser();
+        $tenantId = (string) $ownerUser->tenant_id;
+        $userId = $ownerUser->getKey();
 
         $data['tenant_id'] = $tenantId;
         $data['user_id'] = $userId;
@@ -187,5 +188,15 @@ class DocumentsRelationManager extends RelationManager
         }
 
         return $finalPath;
+    }
+
+    private function ownerUser(): User
+    {
+        $record = $this->getOwnerRecord();
+        if (! $record instanceof User) {
+            throw new \RuntimeException('Expected User as owner record.');
+        }
+
+        return $record;
     }
 }

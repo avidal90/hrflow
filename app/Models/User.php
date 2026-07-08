@@ -189,36 +189,43 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return str_repeat('*', $length - 4).mb_substr($clean, -4);
     }
 
+    /** @return BelongsTo<Department, $this> */
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
     }
 
+    /** @return HasMany<Document, $this> */
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
     }
 
+    /** @return HasMany<LeaveRequest, $this> */
     public function leaveRequests(): HasMany
     {
         return $this->hasMany(LeaveRequest::class);
     }
 
+    /** @return HasMany<Department, $this> */
     public function managedDepartments(): HasMany
     {
         return $this->hasMany(Department::class, 'manager_user_id');
     }
 
+    /** @return HasMany<LeaveRequest, $this> */
     public function resolvedLeaveRequests(): HasMany
     {
         return $this->hasMany(LeaveRequest::class, 'resolved_by_user_id');
     }
 
+    /** @return HasMany<TimeEntry, $this> */
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
     }
 
+    /** @return HasMany<TurnoAssignment, $this> */
     public function turnoAssignments(): HasMany
     {
         return $this->hasMany(TurnoAssignment::class);
@@ -380,6 +387,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             && (string) $this->getKey() === (string) $departmentManagerId;
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
         if ($user->isSuperAdmin()) {
@@ -423,6 +434,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             && (string) $this->tenant_id === (string) $tenantId;
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

@@ -20,16 +20,22 @@ class Department extends Model
     /** @use HasFactory<DepartmentFactory> */
     use BelongsToTenant, HasFactory;
 
+    /** @return HasMany<User, $this> */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_user_id');
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
         if ($user->isSuperAdmin()) {
@@ -53,6 +59,7 @@ class Department extends Model
         return $query->whereRaw('1 = 0');
     }
 
+    /** @return BelongsTo<Tenant, $this> */
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

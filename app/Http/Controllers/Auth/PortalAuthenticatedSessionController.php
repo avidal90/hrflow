@@ -158,7 +158,7 @@ class PortalAuthenticatedSessionController extends Controller
     private function loginViewData(Request $request): array
     {
         if ($this->isPortalRequest($request)) {
-            $tenantName = tenant()?->name ?? 'tu empresa';
+            $tenantName = tenant()->name ?? 'tu empresa';
 
             return [
                 'title' => 'Portal del empleado | HRFlow',

@@ -79,6 +79,6 @@ class UpdateUserRequest extends FormRequest
 
     private function resolveTenantId(User $user): string
     {
-        return (string) ($this->input('tenant_id') ?? $user->tenant_id ?? $this->user()?->tenant_id ?? '');
+        return (string) ($this->input('tenant_id') ?? $user->tenant_id ?? $this->user()->tenant_id ?? '');
     }
 }

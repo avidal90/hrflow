@@ -88,8 +88,8 @@ class PortalDashboardController extends Controller
 
         return sprintf(
             'Tu ausencia aprobada mas cercana fue del %s al %s.',
-            $startDate?->format('d/m/Y') ?? '-',
-            $endDate?->format('d/m/Y') ?? '-'
+            $startDate->format('d/m/Y') ?? '-',
+            $endDate->format('d/m/Y') ?? '-'
         );
     }
 
@@ -107,7 +107,7 @@ class PortalDashboardController extends Controller
             return $startDate->format('d/m');
         }
 
-        return $endDate?->format('d/m') ?? $startDate?->format('d/m') ?? '-';
+        return $endDate->format('d/m') ?? $startDate->format('d/m') ?? '-';
     }
 
     private function nearestApprovedLeaveRequest(User $user): ?LeaveRequest

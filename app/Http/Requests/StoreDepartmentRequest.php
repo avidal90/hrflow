@@ -62,6 +62,6 @@ class StoreDepartmentRequest extends FormRequest
 
     private function resolveTenantId(): string
     {
-        return (string) ($this->input('tenant_id') ?? $this->user()?->tenant_id ?? '');
+        return (string) ($this->input('tenant_id') ?? $this->user()->tenant_id ?? '');
     }
 }

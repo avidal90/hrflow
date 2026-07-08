@@ -11,7 +11,6 @@ trait BelongsToTenant
 {
     public static function bootBelongsToTenant(): void
     {
-        /** @var class-string<Model> $modelClass */
         $modelClass = static::class;
 
         $modelClass::creating(function (Model $model): void {
@@ -31,9 +30,13 @@ trait BelongsToTenant
             return;
         }
 
-        $model->tenant_id = $user->tenant_id;
+        $model->setAttribute('tenant_id', $user->tenant_id);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeForCurrentTenant(Builder $query): Builder
     {
         $user = Auth::user();
@@ -45,11 +48,19 @@ trait BelongsToTenant
         return $this->scopeVisibleTo($query, $user);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeForTenant(Builder $query, int|string $tenantId): Builder
     {
         return $query->where($query->getModel()->qualifyColumn('tenant_id'), $tenantId);
     }
 
+    /**
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
         if ($user->isSuperAdmin()) {

@@ -15,6 +15,9 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+/**
+ * @property int $remainingVacationDays
+ */
 class LeaveRequests extends Component
 {
     use WithPagination;
@@ -58,8 +61,6 @@ class LeaveRequests extends Component
     public function remainingVacationDays(): int
     {
         $user = auth()->user();
-        abort_unless($user instanceof User, 403);
-
         abort_unless($user instanceof User, 403);
 
         return $user->remainingVacationDays();

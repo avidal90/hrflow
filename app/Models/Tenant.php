@@ -38,6 +38,7 @@ class Tenant extends BaseTenant
         );
     }
 
+    /** @return string[] */
     public static function getCustomColumns(): array
     {
         return [
@@ -50,31 +51,37 @@ class Tenant extends BaseTenant
         ];
     }
 
+    /** @return HasMany<Department, $this> */
     public function departments(): HasMany
     {
         return $this->hasMany(Department::class);
     }
 
+    /** @return HasMany<Domain, $this> */
     public function domains(): HasMany
     {
         return $this->hasMany(Domain::class, 'tenant_id');
     }
 
+    /** @return HasMany<User, $this> */
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
     }
 
+    /** @return HasMany<TimeEntry, $this> */
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
     }
 
+    /** @return HasMany<LeaveRequest, $this> */
     public function leaveRequests(): HasMany
     {
         return $this->hasMany(LeaveRequest::class);
     }
 
+    /** @return HasMany<Document, $this> */
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
