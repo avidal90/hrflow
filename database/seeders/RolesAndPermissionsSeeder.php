@@ -16,8 +16,6 @@ class RolesAndPermissionsSeeder extends Seeder
      */
     public function run(): void
     {
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
-
         $permissionsByRole = [
             'super-admin' => [
                 'tenant.view',
@@ -118,6 +116,25 @@ class RolesAndPermissionsSeeder extends Seeder
                 'document.view',
             ],
         ];
+
+        $roleNames = array_keys($permissionsByRole);
+        $permissionNames = collect($permissionsByRole)->flatten()->unique()->values();
+
+        $rolesAlreadySeeded = Role::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', $roleNames)
+            ->count() === count($roleNames);
+
+        $permissionsAlreadySeeded = Permission::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', $permissionNames->all())
+            ->count() === $permissionNames->count();
+
+        if ($rolesAlreadySeeded && $permissionsAlreadySeeded) {
+            return;
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $permissions = collect($permissionsByRole)
             ->flatten()

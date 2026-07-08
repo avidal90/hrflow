@@ -24,13 +24,24 @@ class FestivosSeeder extends Seeder
             '2026-12-25' => 'Natividad del Señor',
         ];
 
+        $festivoDates = array_keys($exampleFestivos);
+
         Tenant::query()
             ->whereKeyNot(Tenant::principalTenantId())
             ->get()
-            ->each(function (Tenant $tenant) use ($exampleFestivos): void {
+            ->each(function (Tenant $tenant) use ($festivoDates): void {
+                $alreadySeeded = Festivo::query()
+                    ->where('tenant_id', $tenant->getKey())
+                    ->whereIn('date', $festivoDates)
+                    ->count() === count($festivoDates);
+
+                if ($alreadySeeded) {
+                    return;
+                }
+
                 $rows = [];
 
-                foreach (array_keys($exampleFestivos) as $date) {
+                foreach ($festivoDates as $date) {
                     $rows[] = [
                         'tenant_id' => $tenant->getKey(),
                         'date' => $date,

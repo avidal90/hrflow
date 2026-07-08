@@ -14,6 +14,10 @@ class DemoTenantsSeeder extends Seeder
      */
     public function run(): void
     {
+        if ($this->demoDataAlreadySeeded()) {
+            return;
+        }
+
         $principalTenant = Tenant::ensurePrincipalTenant();
 
         $northwind = Tenant::query()->firstOrCreate(
@@ -156,6 +160,31 @@ class DemoTenantsSeeder extends Seeder
         $acmeDepartments[0]->update(['manager_user_id' => $acmeCompanyAdmin->getKey()]);
     }
 
+    private function demoDataAlreadySeeded(): bool
+    {
+        $demoTenantIds = ['northwind-demo', 'acme-demo'];
+
+        $demoUserEmails = [
+            'ana.gomez@northwind.local',
+            'luis.martin@northwind.local',
+            'maria.santos@northwind.local',
+            'javier.ramos@northwind.local',
+            'sofia.fernandez@acme.local',
+            'carlos.ortega@acme.local',
+            'nuria.lopez@acme.local',
+        ];
+
+        $tenantsExist = Tenant::query()
+            ->whereIn('id', $demoTenantIds)
+            ->count() === count($demoTenantIds);
+
+        $usersExist = User::query()
+            ->whereIn('email', $demoUserEmails)
+            ->count() === count($demoUserEmails);
+
+        return $tenantsExist && $usersExist;
+    }
+
     /**
      * @param  array<int, string>  $names
      * @return array<int, Department>
@@ -180,7 +209,7 @@ class DemoTenantsSeeder extends Seeder
         $user->forceFill([
             'department_id' => $departmentId,
             'employee_code' => $employeeCode,
-            'hire_date' => now()->subMonths(fake()->numberBetween(6, 36))->toDateString(),
+            'hire_date' => now()->subMonths(random_int(6, 36))->toDateString(),
             'employment_status' => 'active',
             'job_title' => $jobTitle,
         ])->save();
