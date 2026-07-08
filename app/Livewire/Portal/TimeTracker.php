@@ -9,6 +9,7 @@ use App\Models\TurnoAssignment;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\View\View;
+use Livewire\Attributes\Poll;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -51,7 +52,7 @@ class TimeTracker extends Component
         $this->resetPage();
     }
 
-    #[\Livewire\Attributes\Poll('30s')]
+    #[Poll('30s')]
     public function syncActiveEntry(): void
     {
         $user = auth()->user();
