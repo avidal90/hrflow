@@ -89,26 +89,34 @@ class UserInfolist
                             ->date('d/m/Y'),
                         TextEntry::make('employment_status')
                             ->label('Estado laboral')
-                            ->badge()
-                            ->formatStateUsing(fn (string $state): string => match ($state) {
-                                'active' => 'Activo',
-                                'inactive' => 'Inactivo',
-                                'on_leave' => 'De baja',
-                                'terminated' => 'Finalizado',
-                                default => $state,
-                            })
-                            ->color(fn (string $state): string => match ($state) {
-                                'active' => 'success',
-                                'inactive' => 'danger',
-                                'on_leave' => 'warning',
-                                'terminated' => 'gray',
-                                default => 'gray',
-                            }),
+                            ->formatStateUsing(fn (string $state): string => self::employmentStatusBadge($state))
+                            ->html(),
                         TextEntry::make('annual_vacation_days')
                             ->label('Días de vacaciones asignados'),
                     ])
                     ->columns(2),
             ])
             ->columns(1);
+    }
+
+    private static function employmentStatusBadge(string $state): string
+    {
+        $label = match ($state) {
+            'active' => 'Activo',
+            'inactive' => 'Inactivo',
+            'on_leave' => 'De baja',
+            'terminated' => 'Finalizado',
+            default => $state,
+        };
+
+        $classes = match ($state) {
+            'active' => 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+            'inactive' => 'bg-red-50 text-red-700 ring-red-200',
+            'on_leave' => 'bg-amber-50 text-amber-700 ring-amber-200',
+            'terminated' => 'bg-slate-100 text-slate-700 ring-slate-200',
+            default => 'bg-slate-100 text-slate-700 ring-slate-200',
+        };
+
+        return '<span class="inline-flex w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 '.$classes.'">'.$label.'</span>';
     }
 }

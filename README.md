@@ -16,6 +16,7 @@ HRFlow demuestra la construcción de una aplicación empresarial real aplicando 
 - Gestión documental (nóminas, contratos, normativas, otros)
 - Control de solicitudes de vacaciones y permisos retribuidos
 - Gestión de registros horarios (fichajes)
+- Reporting básico de control horario con Partes de horas (filtros por empleado/año/mes, gráfico diario y resumen mensual)
 - Gestión de turnos y asignaciones de turno por empleado con vigencia temporal
 - Gestión de festivos por empresa
 - Sistema de roles y permisos granulares
@@ -27,6 +28,7 @@ HRFlow demuestra la construcción de una aplicación empresarial real aplicando 
 - Descarga de documentación personal
 - Calendario laboral con eventos de ausencias y festivos
 - Notificaciones en tiempo real
+- Vista de Partes de horas por empleado con desglose diario y resumen mensual
 
 ### API REST
 
@@ -47,6 +49,14 @@ HRFlow demuestra la construcción de una aplicación empresarial real aplicando 
 - 4 GitHub Actions configurados
 - 4 agentes de IA especializados (Code Reviewer, Full Stack Developer, Architect, Test Engineer)
 - MCP server (Laravel Boost) para asistencia técnica basada en documentación oficial
+
+### Reporting implementado
+
+- Módulo **Partes de horas** integrado en Filament dentro de **Control de tiempo**
+- Filtros por empleado, año y mes
+- Gráfico de barras con todos los días del mes (incluye días sin fichaje en 0)
+- Resumen mensual con horas totales, media diaria y días trabajados
+- Aislamiento multi-tenant y control de acceso por rol aplicados en consultas y visualización
 
 ---
 
@@ -478,7 +488,8 @@ Junto con **Laravel Boost** (MCP server), estos agentes permiten asistencia téc
 
 Las siguientes funcionalidades están planificadas para completar el MVP:
 
-- [ ] Módulo de reporting (resumen de horas, vacaciones, ausencias)
+- [x] Módulo de reporting básico: Partes de horas (resumen de horas por día y mes)
+- [ ] Ampliar reporting (vacaciones y ausencias)
 - [ ] Organigrama empresarial visual
 - [ ] Endurecimiento del aislamiento multi-tenant en formularios Filament (normalización server-side de `tenant_id`)
 - [ ] Rate limiting explícito en endpoints de listado de API

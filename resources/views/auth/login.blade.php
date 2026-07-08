@@ -25,7 +25,7 @@
                     </div>
 
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-sm font-medium text-slate-700" for="password">Contrasena</label>
+                        <label class="text-sm font-medium text-slate-700" for="password">Contraseña</label>
                         <input id="password" type="password" name="password" required autocomplete="current-password"
                             class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20">
                         @error('password')

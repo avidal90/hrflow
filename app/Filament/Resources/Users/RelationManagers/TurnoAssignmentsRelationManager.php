@@ -107,6 +107,7 @@ class TurnoAssignmentsRelationManager extends RelationManager
             ->defaultSort('valid_from', 'desc')
             ->headerActions([
                 CreateAction::make()
+                    ->label('Crear asignacion de turno')
                     ->mutateFormDataUsing(fn (array $data): array => $this->mutateFormData($data)),
             ])
             ->recordActions([
