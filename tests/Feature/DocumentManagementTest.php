@@ -12,6 +12,7 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -58,6 +59,46 @@ class DocumentManagementTest extends TestCase
             $document->file_path,
         );
         $this->assertTrue(Storage::disk(Document::STORAGE_DISK)->exists($document->file_path));
+
+        /** @var DatabaseNotification $notification */
+        $notification = $employee->notifications()->latest('id')->firstOrFail();
+
+        $this->assertSame('Nuevo documento disponible', $notification->data['title'] ?? null);
+        $this->assertSame(
+            'Se ha subido el documento Nomina junio 2026 en la carpeta Nominas.',
+            $notification->data['body'] ?? null,
+        );
+        $this->assertSame('success', $notification->data['status'] ?? null);
+        $this->assertSame('Ver documentación', $notification->data['actions'][0]['label'] ?? null);
+        $this->assertStringContainsString(
+            '/portal/'.$tenant->getKey().'/documentacion?carpeta='.DocumentFolder::Payrolls->value,
+            $notification->data['actions'][0]['url'] ?? '',
+        );
+    }
+
+    public function test_document_hidden_for_employee_does_not_create_portal_notification(): void
+    {
+        Storage::fake(Document::STORAGE_DISK);
+
+        [$tenant, $hrUser, $employee] = $this->createTenantWithHrAndEmployee();
+
+        $this->actingAs($hrUser);
+
+        Livewire::test(CreateDocument::class)
+            ->fillForm([
+                'tenant_id' => $tenant->getKey(),
+                'user_id' => $employee->getKey(),
+                'folder' => DocumentFolder::Contracts->value,
+                'name' => 'Contrato interno',
+                'description' => 'No visible en portal.',
+                'is_visible_to_employee' => false,
+                'file_path' => UploadedFile::fake()->create('contrato-interno.pdf', 512, 'application/pdf'),
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors()
+            ->assertNotified();
+
+        $this->assertSame(0, $employee->notifications()->count());
     }
 
     public function test_document_upload_rejects_files_larger_than_twenty_megabytes(): void

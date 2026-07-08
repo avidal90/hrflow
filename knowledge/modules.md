@@ -73,6 +73,7 @@ Casos de uso:
 - Iniciar/finalizar pausa.
 - Fichar salida.
 - Revisar historial.
+- Consultar partes de horas (por empleado, año y mes).
 
 Flujo principal:
 1. Empleado ficha entrada.
@@ -88,6 +89,8 @@ Excepciones:
 Reglas:
 - Secuencia temporal valida obligatoria.
 - Registros cerrados/locked no se editan sin control especial.
+- Los partes de horas solo cuentan fichajes con status Complete.
+- El parte de horas filtra por tenant: company-admin/hr ven todos los empleados, dept-manager solo su departamento.
 
 ## 6. Modulo: Vacaciones
 

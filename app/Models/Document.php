@@ -6,6 +6,8 @@ use App\Enums\DocumentFolder;
 use App\Models\Concerns\BelongsToTenant;
 use App\Policies\DocumentPolicy;
 use Database\Factories\DocumentFactory;
+use Filament\Actions\Action as FilamentAction;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,6 +43,42 @@ class Document extends Model
 
     protected static function booted(): void
     {
+        static::created(function (self $document): void {
+            if (! $document->is_visible_to_employee || blank($document->tenant_id) || blank($document->user_id)) {
+                return;
+            }
+
+            if ($document->uploaded_by_user_id !== null && (string) $document->uploaded_by_user_id === (string) $document->user_id) {
+                return;
+            }
+
+            $employee = $document->user;
+
+            if (! $employee instanceof User) {
+                return;
+            }
+
+            $folderLabel = $document->folder instanceof DocumentFolder
+                ? $document->folder->label()
+                : (DocumentFolder::tryFrom((string) $document->folder)?->label() ?? 'Documentos');
+
+            $portalUrl = route('portal.documents.index', [
+                'tenant' => $document->tenant_id,
+                'carpeta' => $document->folder instanceof DocumentFolder ? $document->folder->value : (string) $document->folder,
+            ]);
+
+            Notification::make()
+                ->title('Nuevo documento disponible')
+                ->body("Se ha subido el documento {$document->name} en la carpeta {$folderLabel}.")
+                ->success()
+                ->actions([
+                    FilamentAction::make('view')
+                        ->label('Ver documentación')
+                        ->url($portalUrl),
+                ])
+                ->sendToDatabase($employee);
+        });
+
         static::forceDeleted(function (self $document): void {
             self::deleteStoredFile($document->disk, $document->file_path);
         });
