@@ -9,20 +9,13 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::table('activity_log', function (Blueprint $table) {
-            $table->string('tenant_id')->nullable()->change();
-        });
-    }
+public function up(): void
+{
+    // tenant_id is created as string in 2026_07_10_072526_add_tenant_id_and_ip_address_to_activity_log_table.php.
+}
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('activity_log', function (Blueprint $table) {
-            $table->unsignedBigInteger('tenant_id')->nullable()->change();
-        });
-    }
+public function down(): void
+{
+    // No-op.
+}
 };
