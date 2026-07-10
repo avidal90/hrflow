@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\LeaveRequestStatus;
 use App\Enums\LeaveRequestType;
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Concerns\LogsTenantActivity;
 use App\Policies\LeaveRequestPolicy;
 use Database\Factories\LeaveRequestFactory;
 use Filament\Actions\Action as FilamentAction;
@@ -40,7 +41,7 @@ use Illuminate\Support\Carbon;
 class LeaveRequest extends Model
 {
     /** @use HasFactory<LeaveRequestFactory> */
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsTenantActivity, SoftDeletes;
 
     protected static function booted(): void
     {

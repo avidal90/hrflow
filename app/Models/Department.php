@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Concerns\LogsTenantActivity;
 use App\Policies\DepartmentPolicy;
 use Database\Factories\DepartmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Department extends Model
 {
     /** @use HasFactory<DepartmentFactory> */
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, LogsTenantActivity;
 
     /** @return HasMany<User, $this> */
     public function users(): HasMany

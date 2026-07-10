@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\TimeEntryStatus;
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Concerns\LogsTenantActivity;
 use App\Policies\TimeEntryPolicy;
 use Carbon\CarbonImmutable;
 use Database\Factories\TimeEntryFactory;
@@ -25,7 +26,7 @@ use Illuminate\Validation\ValidationException;
 class TimeEntry extends Model
 {
     /** @use HasFactory<TimeEntryFactory> */
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, LogsTenantActivity;
 
     protected static function booted(): void
     {

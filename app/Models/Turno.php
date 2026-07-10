@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Concerns\LogsTenantActivity;
 use App\Policies\TurnoPolicy;
 use Carbon\CarbonImmutable;
 use Database\Factories\TurnoFactory;
@@ -20,7 +21,7 @@ use Illuminate\Validation\ValidationException;
 class Turno extends Model
 {
     /** @use HasFactory<TurnoFactory> */
-    use BelongsToTenant, HasFactory;
+    use BelongsToTenant, HasFactory, LogsTenantActivity;
 
     protected static function booted(): void
     {

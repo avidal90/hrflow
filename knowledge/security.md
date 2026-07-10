@@ -20,6 +20,19 @@ Documentar amenazas, controles y criterios de seguridad para proteger datos de R
 - Los cambios de seguridad se apoyan en documentacion oficial consultada via Laravel Boost cuando el riesgo no es trivial.
 - Las decisiones deben mantener cohesion con SOLID para evitar disenos inseguros por acoplamiento excesivo.
 
+## 2.2 Sistema de auditoria (spatie/laravel-activitylog)
+
+Implementado en 2026-07-10.
+
+- Modelos auditados: User, Department, LeaveRequest, TimeEntry, Document, Turno.
+- Trait LogsTenantActivity (app/Models/Concerns/LogsTenantActivity.php): añade LogsActivity + captura tenant_id e ip_address en cada registro.
+- Modelo personalizado Activity (app/Models/Activity.php) extiende SpatieActivity y añade relacion con Tenant.
+- Config: activitylog.php -> activity_model = App\Models\Activity::class.
+- Policy ActivityPolicy: superadmin ve todo; company-admin solo ve su tenant.
+- Resource ActivityLogResource (app/Filament/Resources/ActivityLogs/): solo lectura, grupo navegacion Auditoria.
+- Filtros disponibles: empresa, usuario, evento, modelo, rango de fechas.
+- Vista detalle con Infolist: informacion general + valores anteriores/nuevos en KeyValueEntry.
+
 ## 3. Superficies de riesgo
 
 - Acceso a datos de empleados.

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\DocumentFolder;
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Concerns\LogsTenantActivity;
 use App\Policies\DocumentPolicy;
 use Database\Factories\DocumentFactory;
 use Filament\Actions\Action as FilamentAction;
@@ -37,7 +38,7 @@ use Illuminate\Support\Str;
 class Document extends Model
 {
     /** @use HasFactory<DocumentFactory> */
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsTenantActivity, SoftDeletes;
 
     public const STORAGE_DISK = 'documents';
 
