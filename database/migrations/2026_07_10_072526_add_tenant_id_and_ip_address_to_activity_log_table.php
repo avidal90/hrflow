@@ -23,8 +23,9 @@ Schema::connection(config('activitylog.database_connection'))
      */
     public function down(): void
     {
-        Schema::table('activity_log', function (Blueprint $table) {
-            $table->dropColumn(['tenant_id', 'ip_address']);
-        });
+Schema::connection(config('activitylog.database_connection'))
+    ->table(config('activitylog.table_name'), function (Blueprint $table) {
+        $table->dropColumn(['tenant_id', 'ip_address']);
+    });
     }
 };
