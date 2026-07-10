@@ -18,6 +18,12 @@ class ViewDocument extends ViewRecord
         return [
             Action::make('download')
                 ->label('Descargar')
+                ->authorize(function (): bool {
+                    $record = $this->getRecord();
+
+                    return $record instanceof Document
+                        && (bool) auth()->user()?->can('download', $record);
+                })
                 ->action(function () {
                     $record = $this->getRecord();
 
