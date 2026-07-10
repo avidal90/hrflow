@@ -22,7 +22,6 @@ HRFlow es una aplicación web SaaS multi-tenant de gestión de recursos humanos 
 | `stancl/tenancy` | ^3.10 | Multi-tenancy |
 | `spatie/laravel-permission` | ^8.0 | RBAC |
 | `spatie/laravel-activitylog` | ^4.12 | Auditoría |
-| `laravel/sanctum` | ^4.3 | Autenticación API |
 | `tailwindcss` | ^4.0 | CSS utilitario |
 | `vite` | ^8.0 | Bundler |
 | `phpunit/phpunit` | ^12.5 | Tests |
@@ -105,16 +104,9 @@ Rutas en `routes/tenant.php` bajo el prefijo `/portal/{tenant}/`:
 
 Componentes Livewire: `TimeTracker`, `LeaveRequests`, `Documents`, `NotificationBell`.
 
-### 4.3 API REST
+### 4.3 Integraciones futuras
 
-Endpoints en `routes/api.php`, protegidos con `auth:sanctum` y throttle `api-authenticated`:
-
-```
-GET|POST   /api/users
-GET|PUT|DELETE /api/users/{user}
-GET|POST   /api/departments
-GET|PUT|DELETE /api/departments/{department}
-```
+El archivo `routes/api.php` queda reservado para una futura API REST orientada a integraciones externas. Esa posible evolución no forma parte del alcance actual del MVP.
 
 ### 4.4 Módulo de turnos
 
@@ -225,7 +217,6 @@ Permisos granulares del tipo `{recurso}.{acción}` (ej. `employee.create`, `leav
 | `Filament/TableFiltersTest` | Filtros de tablas |
 | `Filament/DepartmentMembersRelationManagerTest` | Relaciones de departamento |
 | `Filament/UserRelationManagersTest` | Relation managers de usuario |
-| `Api/UserApiTest` | API REST de usuarios |
 | `DocumentManagementTest` | Ciclo completo documental |
 | `TurnoModuleTest` | Módulo de turnos |
 | `FestivoManagementTest` | Gestión de festivos |

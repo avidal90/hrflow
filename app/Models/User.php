@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\LeaveRequestStatus;
 use App\Enums\LeaveRequestType;
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\Concerns\LogsTenantActivity;
 use App\Policies\UserPolicy;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Carbon\CarbonImmutable;
@@ -23,7 +24,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 #[Fillable(['tenant_id', 'department_id', 'name', 'email', 'password', 'employee_code', 'hire_date', 'employment_status', 'annual_vacation_days', 'job_title', 'avatar_path', 'phone_personal', 'phone_company', 'birth_date', 'national_id', 'social_security_number', 'birth_country', 'address'])]
@@ -32,7 +32,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
-    use BelongsToTenant, HasApiTokens, HasFactory, HasRoles, Notifiable;
+    use BelongsToTenant, HasFactory, HasRoles, LogsTenantActivity, Notifiable;
 
     /**
      * @return array<string, string>

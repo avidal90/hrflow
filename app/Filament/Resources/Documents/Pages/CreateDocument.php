@@ -16,6 +16,12 @@ class CreateDocument extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $actingUser = Auth::user();
+
+        if ($actingUser instanceof User && ! $actingUser->isSuperAdmin()) {
+            $data['tenant_id'] = (string) $actingUser->tenant_id;
+        }
+
         $this->ensureUserBelongsToTenant($data);
 
         $data['disk'] = Document::STORAGE_DISK;

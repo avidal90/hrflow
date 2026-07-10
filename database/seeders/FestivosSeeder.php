@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Festivo;
 use App\Models\Tenant;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
 
 class FestivosSeeder extends Seeder
@@ -26,31 +27,33 @@ class FestivosSeeder extends Seeder
 
         $festivoDates = array_keys($exampleFestivos);
 
-        Tenant::query()
+        /** @var Collection<int, Tenant> $tenants */
+        $tenants = Tenant::query()
             ->whereKeyNot(Tenant::principalTenantId())
-            ->get()
-            ->each(function (Tenant $tenant) use ($festivoDates): void {
-                $alreadySeeded = Festivo::query()
-                    ->where('tenant_id', $tenant->getKey())
-                    ->whereIn('date', $festivoDates)
-                    ->count() === count($festivoDates);
+            ->get();
 
-                if ($alreadySeeded) {
-                    return;
-                }
+        $tenants->each(function (Tenant $tenant) use ($festivoDates): void {
+            $alreadySeeded = Festivo::query()
+                ->where('tenant_id', $tenant->getKey())
+                ->whereIn('date', $festivoDates)
+                ->count() === count($festivoDates);
 
-                $rows = [];
+            if ($alreadySeeded) {
+                return;
+            }
 
-                foreach ($festivoDates as $date) {
-                    $rows[] = [
-                        'tenant_id' => $tenant->getKey(),
-                        'date' => $date,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                }
+            $rows = [];
 
-                Festivo::query()->insertOrIgnore($rows);
-            });
+            foreach ($festivoDates as $date) {
+                $rows[] = [
+                    'tenant_id' => $tenant->getKey(),
+                    'date' => $date,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+
+            Festivo::query()->insertOrIgnore($rows);
+        });
     }
 }

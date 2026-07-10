@@ -246,6 +246,128 @@ class DocumentManagementTest extends TestCase
         $this->assertSame([], DocumentResource::getEloquentQuery()->pluck('id')->all());
     }
 
+    public function test_document_creation_normalizes_tenant_id_to_acting_user_tenant(): void
+    {
+        Storage::fake(Document::STORAGE_DISK);
+
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+
+        $this->createRoles();
+
+        $hrUser = User::factory()->create(['tenant_id' => $tenantA->getKey()]);
+        $hrUser->assignRole('hr');
+
+        $employeeA = User::factory()->create(['tenant_id' => $tenantA->getKey()]);
+        $employeeA->assignRole('employee');
+
+        $this->actingAs($hrUser);
+
+        Livewire::test(CreateDocument::class)
+            ->fillForm([
+                'tenant_id' => $tenantA->getKey(),
+                'user_id' => $employeeA->getKey(),
+                'folder' => DocumentFolder::Payrolls->value,
+                'name' => 'Nomina julio 2026',
+                'is_visible_to_employee' => false,
+                'file_path' => UploadedFile::fake()->create('nomina.pdf', 100, 'application/pdf'),
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $document = Document::query()->firstOrFail();
+
+        $this->assertStringStartsWith(
+            'tenant/'.$tenantA->getKey().'/',
+            $document->file_path,
+        );
+        $this->assertStringNotContainsString(
+            'tenant/'.$tenantB->getKey().'/',
+            $document->file_path,
+        );
+    }
+
+    public function test_document_creation_rejects_cross_tenant_assignment_after_tenant_normalization(): void
+    {
+        Storage::fake(Document::STORAGE_DISK);
+
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+
+        $this->createRoles();
+
+        $hrUser = User::factory()->create(['tenant_id' => $tenantA->getKey()]);
+        $hrUser->assignRole('hr');
+
+        $employeeB = User::factory()->create(['tenant_id' => $tenantB->getKey()]);
+        $employeeB->assignRole('employee');
+
+        $this->actingAs($hrUser);
+
+        // Simula un payload manipulado: tenant_id de tenantB + user del tenantB.
+        // Tras la normalización, tenant_id queda como tenantA, por lo que
+        // employeeB ya no pertenece al tenant normalizado y la creación es rechazada.
+        Livewire::test(CreateDocument::class)
+            ->fillForm([
+                'tenant_id' => $tenantB->getKey(),
+                'user_id' => $employeeB->getKey(),
+                'folder' => DocumentFolder::Payrolls->value,
+                'name' => 'Documento malicioso',
+                'is_visible_to_employee' => false,
+                'file_path' => UploadedFile::fake()->create('malicious.pdf', 100, 'application/pdf'),
+            ])
+            ->call('create');
+
+        $this->assertDatabaseCount('documents', 0);
+    }
+
+    public function test_document_download_policy_allows_hr_own_tenant_and_denies_other_tenant(): void
+    {
+        $tenantA = Tenant::factory()->create();
+        $tenantB = Tenant::factory()->create();
+
+        $this->createRoles();
+
+        $hrA = User::factory()->create(['tenant_id' => $tenantA->getKey()]);
+        $hrA->assignRole('hr');
+
+        $employeeA = User::factory()->create(['tenant_id' => $tenantA->getKey()]);
+        $employeeA->assignRole('employee');
+
+        $employeeB = User::factory()->create(['tenant_id' => $tenantB->getKey()]);
+        $employeeB->assignRole('employee');
+
+        $visibleDocA = Document::factory()->create([
+            'tenant_id' => $tenantA->getKey(),
+            'user_id' => $employeeA->getKey(),
+            'is_visible_to_employee' => true,
+        ]);
+
+        $hiddenDocA = Document::factory()->create([
+            'tenant_id' => $tenantA->getKey(),
+            'user_id' => $employeeA->getKey(),
+            'is_visible_to_employee' => false,
+        ]);
+
+        $docB = Document::factory()->create([
+            'tenant_id' => $tenantB->getKey(),
+            'user_id' => $employeeB->getKey(),
+            'is_visible_to_employee' => true,
+        ]);
+
+        // HR de tenantA puede descargar documentos de su tenant
+        $this->assertTrue($hrA->can('download', $visibleDocA));
+        $this->assertTrue($hrA->can('download', $hiddenDocA));
+
+        // HR de tenantA no puede descargar documentos de tenantB
+        $this->assertFalse($hrA->can('download', $docB));
+
+        // Empleado puede descargar solo sus documentos visibles
+        $this->assertTrue($employeeA->can('download', $visibleDocA));
+        $this->assertFalse($employeeA->can('download', $hiddenDocA));
+        $this->assertFalse($employeeA->can('download', $docB));
+    }
+
     private function createRoles(): void
     {
         foreach (['super-admin', 'company-admin', 'hr', 'department-manager', 'employee'] as $role) {

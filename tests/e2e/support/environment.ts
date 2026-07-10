@@ -5,6 +5,7 @@ const parsedBaseUrl = new URL(playwrightBaseUrl);
 export const playwrightServeHost = parsedBaseUrl.hostname;
 export const playwrightServePort = parsedBaseUrl.port || (parsedBaseUrl.protocol === 'https:' ? '443' : '80');
 export const playwrightDatabasePath = `${process.cwd()}/database/playwright.sqlite`;
+export const playwrightCompiledViewsPath = `${process.cwd()}/storage/framework/testing/playwright-views`;
 export const playwrightServerEnv: NodeJS.ProcessEnv = {
     ...process.env,
     APP_ENV: 'testing',
@@ -15,4 +16,5 @@ export const playwrightServerEnv: NodeJS.ProcessEnv = {
     MAIL_MAILER: 'log',
     QUEUE_CONNECTION: 'sync',
     SESSION_DRIVER: 'file',
+    VIEW_COMPILED_PATH: playwrightCompiledViewsPath,
 };

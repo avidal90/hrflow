@@ -2,7 +2,60 @@
 
 Plataforma web multi-tenant de gestión de recursos humanos, desarrollada con Laravel y Filament como Trabajo de Fin de Máster.
 
-HRFlow demuestra la construcción de una aplicación empresarial real aplicando principios SOLID, arquitectura limpia, Security by Design y herramientas modernas de calidad de software. El proyecto no es comercial; su objetivo es académico y de portfolio profesional.
+HRFlow demuestra la construcción de una aplicación empresarial real aplicando principios SOLID, arquitectura pragmática, Security by Design y herramientas modernas de calidad de software. El proyecto no es comercial; su objetivo es académico y de portfolio profesional.
+
+La aplicación cubre el ciclo operativo principal de RR. HH. dentro de una empresa: estructura organizativa, gestión de empleados, control horario, solicitudes, documentación, calendario laboral, turnos y trazabilidad. Todo ello se ofrece en dos superficies coordinadas: un backoffice administrativo y un portal de autoservicio para la plantilla.
+
+---
+
+## 🎯 Resumen funcional y técnico
+
+### Qué resuelve
+
+HRFlow centraliza procesos que normalmente quedan repartidos entre correos, hojas de cálculo, carpetas compartidas y herramientas aisladas. El sistema permite gestionar personas, tiempo, documentación y supervisión operativa desde un único entorno con aislamiento completo por empresa.
+
+### Superficies de uso
+
+- **Backoffice (Filament):** orientado a administración de empresa, RR. HH. y responsables con permisos internos.
+- **Portal del empleado (Livewire):** orientado a fichaje, solicitudes, consulta documental y calendario personal.
+- **Integraciones futuras:** la arquitectura deja preparada una futura API REST para consumo externo, fuera del alcance actual del MVP.
+
+### Perfiles principales
+
+- **Super-admin:** visión global de la plataforma y de todos los tenants.
+- **Company Admin:** gestión completa de su empresa.
+- **HR:** operaciones de RR. HH. dentro del tenant.
+- **Department Manager:** seguimiento de su departamento y de los usuarios bajo su ámbito.
+- **Employee:** acceso exclusivo a su portal personal.
+
+### Flujo principal de uso
+
+1. Un perfil interno configura empresa, departamentos, usuarios, turnos y festivos desde el backoffice.
+2. Los empleados acceden al portal de su empresa mediante una URL tenant-aware.
+3. Desde el portal registran la jornada, envían solicitudes, consultan documentos y revisan su calendario.
+4. Los perfiles autorizados revisan solicitudes, controlan la actividad y mantienen la información operativa.
+5. Las acciones relevantes quedan protegidas por policies y registradas en auditoría.
+
+### Decisiones de diseño destacadas
+
+- **Modelo unificado de usuario:** en el MVP, `User` representa tanto la identidad autenticable como el perfil laboral.
+- **Multi-tenancy por columna:** el aislamiento se implementa con `tenant_id`, scopes tenant-aware, middleware y policies.
+- **Arquitectura Laravel-native:** la lógica se apoya principalmente en modelos, policies, Form Requests, componentes Livewire y recursos Filament, evitando capas artificiales.
+- **Separación de interfaces:** backoffice y portal comparten dominio, pero responden a necesidades de uso diferentes.
+
+### Flujo técnico resumido
+
+```mermaid
+flowchart TD
+    U[Usuario] --> R[Route]
+    R --> M[Middleware]
+    M --> E[Filament o Livewire o Controller HTTP]
+    E --> V[Validación]
+    V --> P[Policy]
+    P --> D[Modelo Eloquent]
+    D --> DB[(Base de datos)]
+    D --> A[Notificación o Activity Log]
+```
 
 ---
 
@@ -30,11 +83,10 @@ HRFlow demuestra la construcción de una aplicación empresarial real aplicando 
 - Notificaciones en tiempo real
 - Vista de Partes de horas por empleado con desglose diario y resumen mensual
 
-### API REST
+### Integraciones futuras
 
-- Endpoints autenticados con Laravel Sanctum
-- Recursos: usuarios y departamentos
-- Throttling por usuario autenticado
+- Se reserva `routes/api.php` para una futura API REST orientada a integraciones externas
+- La gestión programática de usuarios y departamentos queda como evolución futura
 
 ### Multitenancy
 
@@ -44,7 +96,7 @@ HRFlow demuestra la construcción de una aplicación empresarial real aplicando 
 
 ### Calidad y automatización
 
-- 21 suites de tests PHPUnit
+- 19 suites de tests PHPUnit
 - Tests end-to-end con Playwright (autenticación, fichajes, solicitudes)
 - 4 GitHub Actions configurados
 - 4 agentes de IA especializados (Code Reviewer, Full Stack Developer, Architect, Test Engineer)
@@ -62,20 +114,23 @@ HRFlow demuestra la construcción de una aplicación empresarial real aplicando 
 
 ## 🏛 Arquitectura
 
-El proyecto sigue una arquitectura en capas apoyada en los principios del framework Laravel:
+HRFlow es un monolito modular sobre Laravel 13. La aplicación no introduce una capa de servicios transversal como patrón obligatorio; la orquestación vive principalmente en controladores, componentes Livewire, recursos Filament y modelos con invariantes de dominio.
+
+El proyecto sigue una arquitectura en capas apoyada en las convenciones del framework Laravel:
 
 | Capa | Responsabilidad | Elementos principales |
 |---|---|---|
 | Presentación | Entrada HTTP, validación de formato | Controllers, Livewire Components, Filament Resources |
-| Aplicación | Orquestación de casos de uso | Services, Form Requests |
+| Aplicación | Orquestación de casos de uso | Controllers, acciones de Livewire, Resource Pages, Form Requests |
 | Dominio | Reglas de negocio, invariantes | Models, Enums, Policies |
-| Infraestructura | Persistencia, notificaciones, archivos | Eloquent, Sanctum, ActivityLog |
+| Infraestructura | Persistencia, notificaciones, archivos | Eloquent, autenticación web, ActivityLog |
 
 **Decisiones arquitectónicas destacadas:**
 
 - **User como entidad unificada:** en el MVP, `User` modela tanto la identidad autenticable como el perfil laboral del empleado. Esta decisión simplifica el dominio y facilita la demostración académica.
-- **Multi-tenancy por columna:** aislamiento mediante `tenant_id` en cada entidad de negocio, con `Global Scope` y `Policies` tenant-aware.
+- **Multi-tenancy por columna:** aislamiento mediante `tenant_id` en cada entidad de negocio, con scopes de visibilidad, middleware y `Policies` tenant-aware.
 - **Backoffice y portal separados:** Filament para administración, Blade + Livewire para el portal del empleado.
+- **Lógica cerca del dominio:** validaciones de entrada en Form Requests o Livewire, invariantes en modelos y autorización transversal en policies.
 
 ---
 
@@ -95,7 +150,6 @@ El proyecto sigue una arquitectura en capas apoyada en los principios del framew
 | stancl/tenancy | 3 | Arquitectura multi-tenant |
 | spatie/laravel-permission | 8 | Roles y permisos |
 | spatie/laravel-activitylog | 4 | Auditoría de acciones |
-| Laravel Sanctum | 4 | Autenticación de API |
 | PHPUnit | 12 | Tests unitarios y de integración |
 | Playwright | 1.54 | Tests end-to-end |
 | PHPStan + Larastan | 2 / 3 | Análisis estático de tipos |
@@ -302,7 +356,7 @@ Tests de integración y unitarios. La suite cubre:
 - Autorización y aislamiento entre tenants
 - Flujos del portal del empleado (fichaje, solicitudes, documentos, calendario)
 - Recursos Filament (queries, filtros, etiquetas, gestión de tenants)
-- API REST
+- Integraciones futuras
 - Gestión documental
 - Módulo de turnos
 - Protección de datos sensibles de usuario
@@ -395,7 +449,7 @@ Sistema granular con Spatie Laravel Permission:
 
 ### Validación
 
-Todos los endpoints mutantes usan Form Requests. Los datos del usuario nunca se procesan en bruto desde `$request->all()`.
+Las operaciones HTTP del perfil usan Form Requests. Filament y Livewire validan en su propia capa y los modelos rematan invariantes sensibles antes de persistir. Los datos del usuario nunca se procesan en bruto desde `$request->all()`.
 
 ### Mass Assignment
 
@@ -404,8 +458,9 @@ Todos los modelos definen `$fillable` explícito. No existe ningún modelo con `
 ### Multitenancy y aislamiento
 
 - Aislamiento por `tenant_id` en todas las entidades de negocio
-- Global Scopes y trait `BelongsToTenant` en consultas
+- Scopes tenant-aware y trait `BelongsToTenant` en consultas
 - Middleware `EnsureUserBelongsToTenant` en el portal
+- Policies que verifican tenant + rol + propiedad o jerarquía cuando aplica
 - Tests de aislamiento entre tenants (`TenantIsolationTest`)
 
 ### Auditoría
@@ -419,7 +474,7 @@ Registro de operaciones críticas con `spatie/laravel-activitylog`. Cada acción
 | Broken Access Control | Policies por modelo, tests de autorización |
 | Injection | Uso exclusivo de Eloquent y Query Builder |
 | Security Misconfiguration | Configuración por entorno, sin secrets en código |
-| Identification & Authentication Failures | Sanctum para API, throttle en login |
+| Identification & Authentication Failures | Sesiones web seguras, regeneración de sesión y throttle en login |
 | Software & Data Integrity | Auditoría de dependencias en CI |
 | Security Logging & Monitoring | ActivityLog en operaciones críticas |
 
@@ -432,15 +487,15 @@ hrflow/
 ├── app/
 │   ├── Enums/                  # Enums tipados (estados, tipos)
 │   ├── Filament/
-│   │   ├── Resources/          # 8 recursos del backoffice
+│   │   ├── Resources/          # Recursos del backoffice
 │   │   ├── Pages/              # Páginas personalizadas
 │   │   └── Widgets/            # Widgets del dashboard
 │   ├── Http/
-│   │   ├── Controllers/        # Controladores (API y Portal)
+│   │   ├── Controllers/        # Controladores web y del portal
 │   │   ├── Middleware/         # Middlewares personalizados
 │   │   └── Requests/           # Form Requests de validación
 │   ├── Livewire/Portal/        # Componentes reactivos del portal
-│   ├── Models/                 # Eloquent models
+│   ├── Models/                 # Eloquent models y reglas de dominio
 │   ├── Notifications/          # Notificaciones del sistema
 │   ├── Policies/               # 9 policies de autorización
 │   └── Support/                # Clases de soporte
@@ -454,11 +509,11 @@ hrflow/
 │   ├── js/                     # JavaScript
 │   └── views/                  # Vistas Blade
 ├── routes/
-│   ├── api.php                 # API REST con Sanctum
+│   ├── api.php                 # Reservado para futuras integraciones
 │   ├── tenant.php              # Rutas del portal multi-tenant
 │   └── web.php                 # Rutas web generales
 ├── tests/
-│   ├── Feature/                # 21 suites de tests PHPUnit
+│   ├── Feature/                # 19 suites de tests PHPUnit
 │   └── e2e/                    # 3 suites de tests Playwright
 └── .github/
     ├── agents/                 # 4 agentes de IA configurados
@@ -492,7 +547,7 @@ Las siguientes funcionalidades están planificadas para completar el MVP:
 - [ ] Ampliar reporting (vacaciones y ausencias)
 - [ ] Organigrama empresarial visual
 - [ ] Endurecimiento del aislamiento multi-tenant en formularios Filament (normalización server-side de `tenant_id`)
-- [ ] Rate limiting explícito en endpoints de listado de API
+- [ ] API REST para integraciones externas y emisión controlada de credenciales
 - [ ] Cifrado en reposo de datos personales sensibles
 - [ ] Calendario laboral con integración completa de turnos
 
@@ -502,10 +557,10 @@ Las siguientes funcionalidades están planificadas para completar el MVP:
 
 Este proyecto demuestra dominio práctico de:
 
-- **Laravel avanzado:** multi-tenancy, Sanctum, Policies, Form Requests, Eloquent avanzado, ActivityLog, Notifications
+- **Laravel avanzado:** multi-tenancy, Policies, Form Requests, Eloquent avanzado, ActivityLog y diseño Laravel-native orientado al MVP
 - **Filament v4:** recursos, relation managers, filtros de tabla, acciones, schemas
 - **Livewire 3:** componentes reactivos, polling, paginación
-- **Principios SOLID:** aplicados en diseño de servicios, policies y casos de uso
+- **Principios SOLID:** aplicados de forma pragmática en policies, recursos, componentes y casos de uso
 - **Security by Design:** threat modeling por módulo, OWASP Top 10, aislamiento multi-tenant
 - **Testing profesional:** PHPUnit (feature + integration), Playwright (e2e), cobertura de flujos críticos
 - **Calidad de código:** Pint, PHPStan nivel 6, ESLint, auditorías de dependencias

@@ -1,13 +1,23 @@
-import { expect, test } from '@playwright/test';
+import { expect, Locator, test } from '@playwright/test';
 
 import { loginToPortal, portalNavigation } from './support/portal';
 
-function isoDate(daysFromToday: number): string {
-    const date = new Date();
-    date.setDate(date.getDate() + daysFromToday);
+const vacationRequest = {
+    endDate: '2026-09-03',
+    reason: 'Prueba E2E vacaciones',
+    startDate: '2026-09-01',
+};
 
-    return date.toISOString().slice(0, 10);
+async function setDateInputValue(input: Locator, value: string): Promise<void> {
+    await input.evaluate((element, nextValue) => {
+        const dateInput = element as HTMLInputElement;
+
+        dateInput.value = nextValue;
+        dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+        dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }, value);
 }
+
 
 test('el empleado puede crear una solicitud de vacaciones desde el portal', async ({ page }) => {
     await loginToPortal(page);
@@ -17,17 +27,27 @@ test('el empleado puede crear una solicitud de vacaciones desde el portal', asyn
     await expect(page).toHaveURL(/\/portal\/northwind-demo\/solicitudes$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Mis solicitudes' })).toBeVisible();
 
-    const requestForm = page.locator('form').filter({
-        has: page.getByRole('button', { name: 'Enviar solicitud' }),
-    }).first();
+    const requestForm = page.getByRole('button', { name: 'Enviar solicitud' }).locator('..');
+    const requestTypeSelect = page.locator('select').first();
+    const dateInputs = page.getByRole('textbox');
+    const startDateInput = dateInputs.nth(0);
+    const endDateInput = dateInputs.nth(1);
+    const reasonInput = dateInputs.nth(2);
 
-    await requestForm.locator('select').selectOption('vacation');
-    await requestForm.locator('input[type="date"]').nth(0).fill(isoDate(30));
-    await requestForm.locator('input[type="date"]').nth(1).fill(isoDate(32));
-    await requestForm.locator('textarea').fill('Prueba E2E vacaciones');
-    await requestForm.getByRole('button', { name: 'Enviar solicitud' }).click();
+    await requestTypeSelect.selectOption('vacation');
+    await expect(requestTypeSelect).toHaveValue('vacation');
+    await expect(startDateInput).toBeVisible();
+    await setDateInputValue(startDateInput, vacationRequest.startDate);
+    await expect(startDateInput).toHaveValue(vacationRequest.startDate);
+    await setDateInputValue(endDateInput, vacationRequest.endDate);
+    await expect(endDateInput).toHaveValue(vacationRequest.endDate);
+    await reasonInput.fill(vacationRequest.reason);
+    await requestTypeSelect.selectOption('vacation');
+    await expect(requestTypeSelect).toHaveValue('vacation');
+    await expect(page.getByRole('button', { name: 'Enviar solicitud' })).toBeEnabled();
+    await page.getByRole('button', { name: 'Enviar solicitud' }).click();
 
     await expect(page.getByText('Solicitud enviada correctamente')).toBeVisible();
     await expect(page.locator('tbody').getByText('Pendiente').first()).toBeVisible();
-    await expect(page.locator('tbody').getByText('Prueba E2E vacaciones')).toBeVisible();
+    await expect(page.locator('tbody').getByText(vacationRequest.reason)).toBeVisible();
 });

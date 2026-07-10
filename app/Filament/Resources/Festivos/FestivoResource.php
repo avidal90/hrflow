@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class FestivoResource extends Resource
@@ -57,16 +58,26 @@ class FestivoResource extends Resource
         return $user instanceof User && $user->can('viewAny', Festivo::class);
     }
 
+    /**
+     * @return Builder<Model>
+     */
     public static function getEloquentQuery(): Builder
     {
+        /** @var Builder<Festivo> $query */
         $query = parent::getEloquentQuery()->with('tenant');
         $user = Auth::user();
 
         if (! $user instanceof User) {
-            return $query->whereRaw('1 = 0');
+            /** @var Builder<Model> $emptyQuery */
+            $emptyQuery = $query->whereRaw('1 = 0');
+
+            return $emptyQuery;
         }
 
-        return $query->visibleTo($user);
+        /** @var Builder<Model> $visibleQuery */
+        $visibleQuery = $query->visibleTo($user);
+
+        return $visibleQuery;
     }
 
     public static function getRelations(): array

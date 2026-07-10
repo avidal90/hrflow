@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
 
@@ -58,22 +59,35 @@ class LeaveRequestResource extends Resource
         return $user instanceof User && $user->can('viewAny', LeaveRequest::class);
     }
 
+    /**
+     * @return Builder<Model>
+     */
     public static function getEloquentQuery(): Builder
     {
+        /** @var Builder<LeaveRequest> $query */
         $query = parent::getEloquentQuery()->with(['tenant', 'user', 'resolvedBy']);
         $user = Auth::user();
 
         if (! $user instanceof User) {
-            return $query->whereRaw('1 = 0');
+            /** @var Builder<Model> $emptyQuery */
+            $emptyQuery = $query->whereRaw('1 = 0');
+
+            return $emptyQuery;
         }
 
         $model = $query->getModel();
 
         if (! $model instanceof LeaveRequest) {
-            return $query->whereRaw('1 = 0');
+            /** @var Builder<Model> $emptyQuery */
+            $emptyQuery = $query->whereRaw('1 = 0');
+
+            return $emptyQuery;
         }
 
-        return $model->scopeVisibleToUser($query, $user);
+        /** @var Builder<Model> $visibleQuery */
+        $visibleQuery = $model->scopeVisibleToUser($query, $user);
+
+        return $visibleQuery;
     }
 
     public static function getRelations(): array

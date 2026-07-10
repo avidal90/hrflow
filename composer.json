@@ -12,7 +12,6 @@
         "php": "^8.3",
         "filament/filament": "^4.0",
         "laravel/framework": "^13.8",
-        "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "spatie/laravel-activitylog": "^4.12",
         "spatie/laravel-permission": "^8.0",

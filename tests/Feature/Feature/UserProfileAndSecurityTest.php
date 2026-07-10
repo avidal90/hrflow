@@ -188,33 +188,28 @@ class UserProfileAndSecurityTest extends TestCase
         $this->assertTrue($candidate->refresh()->hasRole('super-admin'));
     }
 
-    public function test_api_rejects_a_weak_password_when_creating_users(): void
+    public function test_profile_password_update_rejects_a_weak_password(): void
     {
         $tenant = Tenant::factory()->create();
 
         $this->createRoles();
 
-        $companyAdmin = User::factory()->create([
+        $employee = User::factory()->create([
             'tenant_id' => $tenant->getKey(),
         ]);
-        $companyAdmin->assignRole('company-admin');
+        $employee->assignRole('employee');
 
-        $department = Department::factory()->create([
-            'tenant_id' => $tenant->getKey(),
-        ]);
+        $response = $this->actingAs($employee)
+            ->from(route('profile.show'))
+            ->put(route('profile.password.update'), [
+                'current_password' => 'password',
+                'password' => 'password',
+                'password_confirmation' => 'password',
+            ]);
 
-        $response = $this->actingAs($companyAdmin)->postJson('/api/users', [
-            'name' => 'Ana Debil',
-            'email' => 'ana.debil@example.test',
-            'password' => 'password',
-            'department_id' => $department->getKey(),
-            'employee_code' => 'EMP-WEAK',
-            'hire_date' => '2026-01-01',
-            'employment_status' => 'active',
-            'annual_vacation_days' => 23,
-        ]);
-
-        $response->assertUnprocessable()->assertJsonValidationErrors(['password']);
+        $response
+            ->assertRedirect(route('profile.show'))
+            ->assertSessionHasErrors(['password']);
     }
 
     public function test_employee_can_manage_avatar_and_password_from_their_profile_page(): void

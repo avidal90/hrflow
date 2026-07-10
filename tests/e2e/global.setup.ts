@@ -3,15 +3,21 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import {
+    playwrightCompiledViewsPath,
     playwrightDatabasePath,
     playwrightServerEnv,
 } from './support/environment';
 
 export default async function globalSetup(): Promise<void> {
     const databaseDirectory = path.dirname(playwrightDatabasePath);
+    const compiledViewsDirectory = playwrightCompiledViewsPath;
 
     if (!existsSync(databaseDirectory)) {
         mkdirSync(databaseDirectory, { recursive: true });
+    }
+
+    if (!existsSync(compiledViewsDirectory)) {
+        mkdirSync(compiledViewsDirectory, { recursive: true });
     }
 
     if (!existsSync(playwrightDatabasePath)) {

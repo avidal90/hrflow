@@ -133,6 +133,7 @@ class DocumentsRelationManager extends RelationManager
             ->recordActions([
                 Action::make('download')
                     ->label('Descargar')
+                    ->authorize(fn (Document $record): bool => (bool) auth()->user()?->can('download', $record))
                     ->action(fn (Document $record) => response()->download(
                         Storage::disk($record->disk ?: Document::STORAGE_DISK)->path($record->file_path),
                         $record->original_filename ?: basename($record->file_path),

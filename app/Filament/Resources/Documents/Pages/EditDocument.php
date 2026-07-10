@@ -28,6 +28,12 @@ class EditDocument extends EditRecord
         return [
             Action::make('download')
                 ->label('Descargar')
+                ->authorize(function (): bool {
+                    $record = $this->getRecord();
+
+                    return $record instanceof Document
+                        && (bool) auth()->user()?->can('download', $record);
+                })
                 ->action(function () {
                     $record = $this->getRecord();
 
@@ -53,6 +59,12 @@ class EditDocument extends EditRecord
 
         if (! $record instanceof Document) {
             return $data;
+        }
+
+        $actingUser = Auth::user();
+
+        if ($actingUser instanceof User && ! $actingUser->isSuperAdmin()) {
+            $data['tenant_id'] = (string) $actingUser->tenant_id;
         }
 
         $this->ensureUserBelongsToTenant($data);
