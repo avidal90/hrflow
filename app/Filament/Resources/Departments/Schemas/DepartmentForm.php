@@ -46,6 +46,7 @@ class DepartmentForm
                                         $query->where('tenant_id', $tenantId);
                                     }
 
+                                    $query->whereHas('roles', fn (Builder $rolesQuery) => $rolesQuery->where('name', 'department-manager'));
                                     $query->orderBy('name');
                                 },
                             )
