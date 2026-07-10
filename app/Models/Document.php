@@ -59,13 +59,15 @@ class Document extends Model
                 return;
             }
 
-            $folderLabel = $document->folder instanceof DocumentFolder
-                ? $document->folder->label()
-                : (DocumentFolder::tryFrom((string) $document->folder)?->label() ?? 'Documentos');
+            $folderAttribute = $document->getAttribute('folder');
+            $folder = $folderAttribute instanceof DocumentFolder
+                ? $folderAttribute
+                : (DocumentFolder::tryFrom((string) $folderAttribute) ?? DocumentFolder::Other);
+            $folderLabel = $folder->label();
 
             $portalUrl = route('portal.documents.index', [
                 'tenant' => $document->tenant_id,
-                'carpeta' => $document->folder instanceof DocumentFolder ? $document->folder->value : (string) $document->folder,
+                'carpeta' => $folder->value,
             ]);
 
             Notification::make()

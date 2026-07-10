@@ -18,6 +18,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class DepartmentResource extends Resource
@@ -58,22 +59,35 @@ class DepartmentResource extends Resource
         return $user instanceof User && $user->can('viewAny', Department::class);
     }
 
+    /**
+     * @return Builder<Model>
+     */
     public static function getEloquentQuery(): Builder
     {
+        /** @var Builder<Department> $query */
         $query = parent::getEloquentQuery()->with(['tenant', 'manager']);
         $user = Auth::user();
 
         if (! $user instanceof User) {
-            return $query->whereRaw('1 = 0');
+            /** @var Builder<Model> $emptyQuery */
+            $emptyQuery = $query->whereRaw('1 = 0');
+
+            return $emptyQuery;
         }
 
         $model = $query->getModel();
 
         if (! $model instanceof Department) {
-            return $query->whereRaw('1 = 0');
+            /** @var Builder<Model> $emptyQuery */
+            $emptyQuery = $query->whereRaw('1 = 0');
+
+            return $emptyQuery;
         }
 
-        return $model->scopeVisibleTo($query, $user);
+        /** @var Builder<Model> $visibleQuery */
+        $visibleQuery = $model->scopeVisibleTo($query, $user);
+
+        return $visibleQuery;
     }
 
     public static function getRelations(): array
