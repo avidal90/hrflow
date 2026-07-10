@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('activity_log', function (Blueprint $table) {
-            $table->string('tenant_id')->nullable()->index()->after('batch_uuid');
-            $table->string('ip_address', 45)->nullable()->after('tenant_id');
-        });
+Schema::connection(config('activitylog.database_connection'))
+    ->table(config('activitylog.table_name'), function (Blueprint $table) {
+        $table->string('tenant_id')->nullable()->index()->after('batch_uuid');
+        $table->string('ip_address', 45)->nullable()->after('tenant_id');
+    });
     }
 
     /**
