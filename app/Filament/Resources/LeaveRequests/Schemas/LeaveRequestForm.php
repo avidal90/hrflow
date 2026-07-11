@@ -83,7 +83,7 @@ class LeaveRequestForm
                         Textarea::make('reason')
                             ->label('Motivo')
                             ->disabled(fn (): bool => ! self::canEditCoreFields())
-                            ->required()
+                            ->nullable()
                             ->rows(3)
                             ->maxLength(2000)
                             ->columnSpanFull(),
