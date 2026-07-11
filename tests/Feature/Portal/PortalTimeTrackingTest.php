@@ -97,6 +97,39 @@ class PortalTimeTrackingTest extends TestCase
         ]);
     }
 
+    public function test_employee_can_stop_tracking_when_entry_started_previous_day(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-07-09 08:00:00', 'UTC'));
+
+        $tenant = Tenant::factory()->create(['timezone' => 'UTC']);
+        $employee = $this->createEmployee($tenant);
+
+        TimeEntry::factory()->create([
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->id,
+            'work_date' => '2026-07-08',
+            'check_in_time' => '20:00:00',
+            'check_out_time' => null,
+            'duration_minutes' => null,
+            'status' => TimeEntryStatus::Incomplete->value,
+        ]);
+
+        Livewire::actingAs($employee)
+            ->test(TimeTracker::class)
+            ->call('stopTracking')
+            ->assertSee('Iniciar jornada');
+
+        $this->assertDatabaseHas(TimeEntry::class, [
+            'tenant_id' => $tenant->getKey(),
+            'user_id' => $employee->id,
+            'check_out_time' => '08:00:00',
+            'duration_minutes' => 720,
+            'status' => TimeEntryStatus::Complete->value,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
     public function test_active_tracker_shows_initial_elapsed_time_on_first_render(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-07-08 20:45:15', 'Europe/Madrid'));

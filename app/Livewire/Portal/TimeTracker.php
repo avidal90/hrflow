@@ -8,6 +8,7 @@ use App\Models\Turno;
 use App\Models\TurnoAssignment;
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Poll;
 use Livewire\Component;
@@ -49,9 +50,30 @@ class TimeTracker extends Component
         abort_unless($this->activeEntry !== null, 422);
         abort_unless((int) $this->activeEntry->user_id === (int) $user->id, 403);
 
-        $this->activeEntry->update(['check_out_time' => $this->tenantNow($user)->format('H:i:s')]);
+        $tenantTimezone = $this->tenantTimezone($user);
+        $checkOutAt = $this->tenantNow($user);
+        $checkInAt = CarbonImmutable::parse(
+            $this->activeEntry->work_date->toDateString().' '.$this->activeEntry->check_in_time,
+            $tenantTimezone
+        );
+
+        if ($checkOutAt->lessThanOrEqualTo($checkInAt)) {
+            throw ValidationException::withMessages([
+                'check_out_time' => __('La hora de salida debe ser posterior a la hora de entrada.'),
+            ]);
+        }
+
+        TimeEntry::withoutEvents(function () use ($checkOutAt, $checkInAt): void {
+            $this->activeEntry?->update([
+                'check_out_time' => $checkOutAt->format('H:i:s'),
+                'duration_minutes' => (int) $checkInAt->diffInMinutes($checkOutAt),
+                'status' => TimeEntryStatus::Complete->value,
+            ]);
+        });
+
         $this->activeEntry = null;
         $this->resetPage();
+        $this->syncActiveEntry();
     }
 
     #[Poll('30s')]
