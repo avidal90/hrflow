@@ -160,19 +160,6 @@ El proyecto sigue una arquitectura en capas apoyada en las convenciones del fram
 
 ---
 
-## 📸 Capturas
-
-> _Las capturas de pantalla se añadirán al proyecto una vez finalizado el ciclo de desarrollo._
-
-| Vista | Descripción |
-|---|---|
-| `docs/screenshots/backoffice-dashboard.png` | Panel principal del backoffice |
-| `docs/screenshots/employee-list.png` | Listado de empleados con filtros |
-| `docs/screenshots/portal-time-tracker.png` | Control de horario del portal |
-| `docs/screenshots/portal-leave-request.png` | Formulario de solicitud de ausencia |
-
----
-
 ## ⚙️ Instalación
 
 ### Requisitos previos
@@ -248,7 +235,7 @@ La aplicación está desplegada en IONOS. Puedes acceder directamente sin necesi
 
 > Javier Ramos y Pablo Herrero tienen historial de solicitudes de ausencia y 15 días de registros horarios precargados para una evaluación completa del portal de empleado.
 
-**Backoffice (Filament):** [https://home-5020875424.app-ionos.space/admin](https://home-5020875424.app-ionos.space/admin)
+**Backoffice (Filament):** [https://home-5020875424.app-ionos.space/login](https://home-5020875424.app-ionos.space/login)
 Acceso con `admin@hrflow.local` / `Hr@Flow2026!`
 
 ---
@@ -577,6 +564,9 @@ Desarrollado por **Antonio Vidal Iglesias** como Trabajo de Fin de Máster.
 
 ---
 
-## 📄 Licencia
+## 📄 Documentación adicional
 
-Este proyecto está bajo la licencia [MIT](LICENSE).
+Url Slides: https://docs.google.com/presentation/d/11tG9tIzNledd0GXHhBOHzkUaBlPPW4R4/edit?usp=drive_link&ouid=104874272346714045442&rtpof=true&sd=true
+
+Url Video: https://drive.google.com/file/d/1hslp9G9Rh6GVU_gdw51kacHi7h0OvWgK/view?usp=drive_link
+
