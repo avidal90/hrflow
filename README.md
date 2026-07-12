@@ -558,7 +558,7 @@ Este proyecto demuestra dominio práctico de:
 
 ## 👤 Autor
 
-Desarrollado por **Antonio Vidal Iglesias** como Trabajo de Fin de Máster.
+Desarrollado por **Antonio Vidal Iglesias** como Trabajo de Fin de Máster, para el curso Máster en Desarrollo con IA – E.II (FD)
 
 - GitHub: [@avidal90](https://github.com/avidal90)
 
